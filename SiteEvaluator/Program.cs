@@ -1,0 +1,3 @@
+﻿
+var commandLineArgs = Environment.GetCommandLineArgs();
+
