@@ -8,4 +8,10 @@ public abstract class HtmlTag
     
     public string CloseTag => "</" + Name + ">";
 
+    [HtmlTagAttribute]
+    public string? Class { get; set; }
+
+    [HtmlTagAttribute]
+    public string? Style { get; set; }
+
 }

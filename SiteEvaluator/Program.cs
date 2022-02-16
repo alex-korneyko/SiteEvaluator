@@ -1,31 +1,21 @@
-﻿
-using SiteEvaluator;
-using SiteEvaluator.Html;
-using SiteEvaluator.Html.Tags;
+﻿using SiteEvaluator.Crawler;
+using SiteEvaluator.PageLoader;
 
 var commandLineArgs = Environment.GetCommandLineArgs();
 
 var baseUrl = "https://www.ukad-group.com/";
 
-var pageLoader = new PageLoader();
-
-var loadedPage = await pageLoader.LoadPage(baseUrl);
-
-var body = HtmlSerializer.GetBody(loadedPage);
-
-if (body != "")
+var siteCrawler = new SiteCrawler(new PageLoader(), settings =>
 {
-    var allALinks = HtmlSerializer.GetAllTagStrings<A>(body);
-    var aLinks = new List<A>();
+    settings.IncludeNofollowLinks = false;
+});
 
-    foreach (var aStringLink in allALinks)
-    {
-        var aLink = HtmlSerializer.Deserialize<A>(aStringLink);
-        if (aLink != null)
-        {
-            aLinks.Add(aLink);
-        }
-    }
+var pageLoadResults = await siteCrawler.CrawlAsync(baseUrl);
 
-    Console.WriteLine(aLinks.Count);
+Console.WriteLine("--------------");
+foreach (var pageLoadResult in pageLoadResults)
+{
+    Console.WriteLine(pageLoadResult);
 }
+Console.WriteLine("--------------");
+Console.WriteLine($"Total crawled pages: {pageLoadResults.Count}");

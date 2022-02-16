@@ -8,5 +8,8 @@ public class A : HtmlTagWithContent
     protected override string Name => "a";
 
     [HtmlTagAttribute]
-    public string Href { get; set; } = string.Empty;
+    public string? Href { get; set; }
+
+    [HtmlTagAttribute]
+    public string? Rel { get; set; }
 }

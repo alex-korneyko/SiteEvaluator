@@ -5,7 +5,7 @@ namespace SiteEvaluator.Html;
 
 public static class HtmlSerializer
 {
-    public static List<string> GetAllTagStrings<T>(string rawHtml) where T : HtmlTag, new()
+    public static List<string> GetAllTagFullStrings<T>(string rawHtml) where T : HtmlTag, new()
     {
         var listEachTagFullStrings = new List<string>();
 
@@ -20,18 +20,21 @@ public static class HtmlSerializer
             if (startTagIndex > -1)
             {
                 found = true;
-                var closeTagIndex = sbRawHtml.ToString().IndexOf(tag.CloseTag, StringComparison.InvariantCulture);
-                if (closeTagIndex > -1)
+                var relativeCloseTagIndex = sbRawHtml
+                    .ToString()
+                    .Substring(startTagIndex)
+                    .IndexOf(tag.CloseTag, StringComparison.InvariantCulture);
+                if (relativeCloseTagIndex > -1)
                 {
-                    var tagFullStringLength = closeTagIndex - startTagIndex + tag.CloseTag.Length;
+                    var tagFullStringLength = relativeCloseTagIndex + tag.CloseTag.Length;
                     var tagString = sbRawHtml.ToString().Substring(startTagIndex, tagFullStringLength);
                     listEachTagFullStrings.Add(tagString);
-                    sbRawHtml.Remove(startTagIndex, tagFullStringLength);
+                    sbRawHtml.Remove(0, startTagIndex + tagFullStringLength);
                 }
                 else
                 {
                     listEachTagFullStrings.Add(tag.OpenTag);
-                    sbRawHtml.Remove(startTagIndex, tag.OpenTag.Length);
+                    sbRawHtml.Remove(0, startTagIndex + tag.OpenTag.Length);
                 }
             }
             else
@@ -45,7 +48,7 @@ public static class HtmlSerializer
 
     public static string GetBody(string rawHtml)
     {
-        var allTagStrings = GetAllTagStrings<Body>(rawHtml);
+        var allTagStrings = GetAllTagFullStrings<Body>(rawHtml);
 
         return allTagStrings.Count > 0 ? allTagStrings[0] : "";
     }
@@ -55,11 +58,11 @@ public static class HtmlSerializer
         throw new NotImplementedException();
     }
 
-    public static T? Deserialize<T>(string stringTagValue) where T : HtmlTag, new()
+    public static T? Deserialize<T>(string tagFullString) where T : HtmlTag, new()
     {
         var tag = new T();
 
-        if (!stringTagValue.StartsWith(tag.OpenTag) || !stringTagValue.EndsWith(tag.CloseTag))
+        if (!tagFullString.StartsWith(tag.OpenTag) || !tagFullString.EndsWith(tag.CloseTag))
         {
             return null;
         }
@@ -76,15 +79,21 @@ public static class HtmlSerializer
                     ? propertyInfo.Name.ToLower()
                     : htmlTagAttribute.AttributeName.ToLower();
                     
-                var attributeStartIndex = stringTagValue
+                var attributeStartIndex = tagFullString
                     .IndexOf(attributeName + "=\"", StringComparison.InvariantCulture);
+
+                if (attributeStartIndex == -1)
+                {
+                    return tag;
+                }
+                
                 var attributeValueStartIndex = attributeStartIndex + attributeName.Length + 2;
                     
-                var attributeValueEndIndex = stringTagValue
+                var attributeValueEndIndex = tagFullString
                     .Substring(attributeValueStartIndex)
                     .IndexOf('"', StringComparison.InvariantCulture) - 1;
 
-                var attributeValue = stringTagValue
+                var attributeValue = tagFullString
                     .Substring(attributeValueStartIndex, attributeValueEndIndex + 1);
 
                 propertyInfo.SetValue(tag, attributeValue);
