@@ -1,4 +1,5 @@
-﻿using SiteEvaluator.PageLoader;
+﻿using System.Net;
+using SiteEvaluator.PageLoader;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.Xml;
 
@@ -19,21 +20,37 @@ public class SiteMapExplorer : ISiteMapExplorer
        settings.Invoke(_settings);
     }
 
-    public async Task<SiteMap> ExploreAsync(string hostUrl)
+    public async Task<SiteMapExploreResult> ExploreAsync(string hostUrl)
     {
-        ConsoleMessage.WriteLineWarning("\nStart sitemap.xml exploring...");
+        ConsoleMessage.WriteLineWarning("Start sitemap.xml exploring...");
         
         var loadSiteMapResult = await _httpContentLoader.LoadSiteMapAsync(hostUrl);
 
-        if (!loadSiteMapResult.IsSuccess) return new SiteMap();
-        
+        if (!loadSiteMapResult.IsSuccess) 
+            return new SiteMapExploreResult(loadSiteMapResult.Exception);
+        if (loadSiteMapResult.HttpStatusCode != HttpStatusCode.OK)
+        {
+            var message = $"Http status code: {loadSiteMapResult.HttpStatusCode}; " +
+                          $"Requested url: {loadSiteMapResult.PageUrl}";
+            
+            ConsoleMessage.WriteLineError(message);
+            return new SiteMapExploreResult(message);
+        }
+
         var siteMapString = loadSiteMapResult.Content;
-        var siteMap = SiteMapSerializer.Deserialize(siteMapString);
+        try
+        {
+            var siteMap = SiteMapSerializer.Deserialize(siteMapString);
+            ConsoleMessage.WriteLineSuccess("sitemap.xml explored!");
+            if (_settings.PrintResult) PrintToConsole(siteMap);
 
-        ConsoleMessage.WriteLineSuccess("sitemap.xml exploring finished!");
-        if (_settings.PrintResult) PrintToConsole(siteMap);
-
-        return siteMap;
+            return new SiteMapExploreResult(siteMap);
+        }
+        catch (Exception e)
+        {
+            ConsoleMessage.WriteLineError($"Exploring error: {e.Message}");
+            return new SiteMapExploreResult(e);
+        }
     }
 
     private static void PrintToConsole(SiteMap siteMap)

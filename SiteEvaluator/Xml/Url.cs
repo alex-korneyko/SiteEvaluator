@@ -9,4 +9,10 @@ public class Url
     
     [XmlElement("lastmod")]
     public DateTime? LastMod { get; set; }
+    
+    [XmlElement("priority")] 
+    public float? Priority { get; set; }
+    
+    [XmlElement("changefreq")] 
+    public string? Changefreq { get; set; }
 }

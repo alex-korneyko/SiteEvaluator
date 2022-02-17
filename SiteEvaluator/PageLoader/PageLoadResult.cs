@@ -6,14 +6,14 @@ public class PageLoadResult: IEquatable<PageLoadResult>
 {
     public PageLoadResult(string pageUrl)
     {
-        PageUrl = pageUrl;
+        PageUrl = pageUrl.EndsWith('/') ? pageUrl : pageUrl + '/';
     }
 
     public string PageUrl { get; }
 
     public string Content { get; private set; } = string.Empty;
 
-    public HttpStatusCode HttpStatusCode { get; private set; }
+    public HttpStatusCode HttpStatusCode { get; set; }
 
     public long PageLoadTime { get; set; }
 

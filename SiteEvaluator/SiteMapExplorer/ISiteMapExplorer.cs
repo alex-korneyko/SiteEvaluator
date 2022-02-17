@@ -4,5 +4,5 @@ namespace SiteEvaluator.SiteMapExplorer;
 
 public interface ISiteMapExplorer
 {
-    Task<SiteMap> ExploreAsync(string hostUrl);
+    Task<SiteMapExploreResult> ExploreAsync(string hostUrl);
 }

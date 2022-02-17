@@ -54,7 +54,12 @@ public class HttpContentLoader : IHttpContentLoader
 
         var indexOfSitemap = loadRobotsResult.Content.IndexOf("Sitemap:", StringComparison.InvariantCulture);
         if (indexOfSitemap == -1)
-            return loadRobotsResult;
+        {
+            return new PageLoadResult(hostUrl)
+            {
+                HttpStatusCode = HttpStatusCode.NotFound
+            };
+        }
 
         var siteMapUrl = loadRobotsResult.Content.Substring(indexOfSitemap + "Sitemap:".Length).Trim();
 

@@ -89,9 +89,14 @@ public class SiteCrawler : ISiteCrawler
 
     private string GetFullUrl(A aTag, string hostUrl)
     {
-        if (aTag.Href != null && aTag.Href.StartsWith(hostUrl))
+        if (aTag.Href != null)
         {
-            return aTag.Href;
+            aTag.Href = aTag.Href.EndsWith('/') ? aTag.Href : aTag.Href + "/";
+            
+            if (aTag.Href.StartsWith(hostUrl))
+            {
+                return aTag.Href;
+            }
         }
 
         if (aTag.Href == null || aTag.Href.StartsWith("http") || !aTag.Href.StartsWith('/') || aTag.Href is "#" or "\\")
