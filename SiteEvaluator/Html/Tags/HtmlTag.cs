@@ -9,6 +9,9 @@ public abstract class HtmlTag
     public string CloseTag => "</" + Name + ">";
 
     [HtmlTagAttribute]
+    public string? Id { get; set; }
+
+    [HtmlTagAttribute]
     public string? Class { get; set; }
 
     [HtmlTagAttribute]

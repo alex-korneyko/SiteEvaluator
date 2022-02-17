@@ -24,6 +24,8 @@ public class SiteCrawler : ISiteCrawler
     
     public async Task<IList<PageLoadResult>> CrawlAsync(string hostUrl)
     {
+        ConsoleMessage.WriteLineWarning("Start crawling...");
+        
         hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
         
         var pageLoadResult = await _httpContentLoader.LoadContentAsync(hostUrl);
@@ -37,6 +39,10 @@ public class SiteCrawler : ISiteCrawler
         }
         
         await ScanLinksAsync(pageBody, hostUrl);
+        
+        ConsoleMessage.WriteLineSuccess("Crawling finished!");
+
+        if (_settings.PrintResult) PrintResult(_result);
 
         return _result;
     }
@@ -63,7 +69,7 @@ public class SiteCrawler : ISiteCrawler
                 continue;
             }
 
-            Console.Write($"Attempt to load : {aLinkTag.Href} ... ");
+            if (_settings.LogToConsole) Console.Write($"Attempt to load : {aLinkTag.Href} ... ");
 
             var pageLoadResult = await _httpContentLoader.LoadContentAsync(fullUrl);
 
@@ -75,7 +81,7 @@ public class SiteCrawler : ISiteCrawler
                 continue;
             }
             
-            ConsoleMessage.WriteLineSuccess(pageLoadResult.ToString());
+            if (_settings.LogToConsole) ConsoleMessage.WriteLineSuccess(pageLoadResult.ToString());
 
             await ScanLinksAsync(pageLoadResult.Content, hostUrl);
         }
@@ -94,5 +100,14 @@ public class SiteCrawler : ISiteCrawler
         }
 
         return hostUrl + aTag.Href;
+    }
+    
+    private static void PrintResult(List<PageLoadResult> result)
+    {
+        ConsoleMessage.WriteLineSuccess("Crawling result:");
+        foreach (var pageLoadResult in result)
+        {
+            Console.WriteLine(pageLoadResult);
+        }
     }
 }
