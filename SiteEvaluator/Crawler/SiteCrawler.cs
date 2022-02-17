@@ -8,16 +8,16 @@ namespace SiteEvaluator.Crawler;
 
 public class SiteCrawler : ISiteCrawler
 {
-    private readonly IPageLoader _pageLoader;
+    private readonly IHttpContentLoader _httpContentLoader;
     private readonly List<PageLoadResult> _result = new();
     private readonly CrawlerSettings _settings = new();
 
-    public SiteCrawler(IPageLoader pageLoader)
+    public SiteCrawler(IHttpContentLoader httpContentLoader)
     {
-        _pageLoader = pageLoader;
+        _httpContentLoader = httpContentLoader;
     }
 
-    public SiteCrawler(IPageLoader pageLoader, Action<CrawlerSettings> crawlerSettings) : this(pageLoader)
+    public SiteCrawler(IHttpContentLoader httpContentLoader, Action<CrawlerSettings> crawlerSettings) : this(httpContentLoader)
     {
         crawlerSettings.Invoke(_settings);
     }
@@ -26,14 +26,14 @@ public class SiteCrawler : ISiteCrawler
     {
         hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
         
-        var pageLoadResult = await _pageLoader.LoadPageAsync(hostUrl);
+        var pageLoadResult = await _httpContentLoader.LoadContentAsync(hostUrl);
         _result.Add(pageLoadResult);
 
         var pageBody = string.Empty;
         
         if (pageLoadResult.HttpStatusCode == HttpStatusCode.OK)
         {
-            pageBody = HtmlSerializer.GetBody(pageLoadResult.PageContent);
+            pageBody = HtmlSerializer.GetBody(pageLoadResult.Content);
         }
         
         await ScanLinksAsync(pageBody, hostUrl);
@@ -65,7 +65,7 @@ public class SiteCrawler : ISiteCrawler
 
             Console.Write($"Attempt to load : {aLinkTag.Href} ... ");
 
-            var pageLoadResult = await _pageLoader.LoadPageAsync(fullUrl);
+            var pageLoadResult = await _httpContentLoader.LoadContentAsync(fullUrl);
 
             _result.Add(pageLoadResult);
 
@@ -77,7 +77,7 @@ public class SiteCrawler : ISiteCrawler
             
             ConsoleMessage.WriteLineSuccess(pageLoadResult.ToString());
 
-            await ScanLinksAsync(pageLoadResult.PageContent, hostUrl);
+            await ScanLinksAsync(pageLoadResult.Content, hostUrl);
         }
     }
 

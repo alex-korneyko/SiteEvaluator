@@ -5,17 +5,31 @@ var commandLineArgs = Environment.GetCommandLineArgs();
 
 var baseUrl = "https://www.ukad-group.com/";
 
-var siteCrawler = new SiteCrawler(new PageLoader(), settings =>
-{
-    settings.IncludeNofollowLinks = false;
-});
+// var siteCrawler = new SiteCrawler(new HttpContentLoader(), settings =>
+// {
+//     settings.IncludeNofollowLinks = false;
+// });
+//
+// var pageLoadResults = await siteCrawler.CrawlAsync(baseUrl);
+//
+// Console.WriteLine("--------------");
+// foreach (var pageLoadResult in pageLoadResults)
+// {
+//     Console.WriteLine(pageLoadResult);
+// }
+// Console.WriteLine("--------------");
+// Console.WriteLine($"Total crawled pages: {pageLoadResults.Count}");
 
-var pageLoadResults = await siteCrawler.CrawlAsync(baseUrl);
+IHttpContentLoader httpContentLoader = new HttpContentLoader();
+var contentLoadResult = await httpContentLoader.LoadSiteMapAsync(baseUrl);
 
-Console.WriteLine("--------------");
-foreach (var pageLoadResult in pageLoadResults)
+if (contentLoadResult.IsSuccess)
 {
-    Console.WriteLine(pageLoadResult);
+    Console.WriteLine($"Status: {contentLoadResult.HttpStatusCode}");
+    Console.WriteLine("sitemap.xml:");
+    Console.WriteLine(contentLoadResult.Content);
 }
-Console.WriteLine("--------------");
-Console.WriteLine($"Total crawled pages: {pageLoadResults.Count}");
+else
+{
+    Console.WriteLine($"Exception: {contentLoadResult.Exception?.Message}");
+}

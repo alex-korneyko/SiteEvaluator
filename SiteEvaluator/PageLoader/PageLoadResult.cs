@@ -11,15 +11,21 @@ public class PageLoadResult: IEquatable<PageLoadResult>
 
     public string PageUrl { get; }
 
-    public string PageContent { get; set; } = string.Empty;
+    public string Content { get; private set; } = string.Empty;
 
-    public HttpStatusCode HttpStatusCode { get; set; }
+    public HttpStatusCode HttpStatusCode { get; private set; }
 
     public long PageLoadTime { get; set; }
 
     public bool IsSuccess { get; set; } = true;
 
     public Exception? Exception { get; set; }
+
+    public async Task ApplyHttpResponse(HttpResponseMessage httpResponseMessage)
+    {
+        HttpStatusCode = httpResponseMessage.StatusCode;
+        Content = await httpResponseMessage.Content.ReadAsStringAsync();
+    }
 
     public bool Equals(PageLoadResult? other)
     {
