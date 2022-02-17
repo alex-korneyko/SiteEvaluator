@@ -2,9 +2,9 @@
 
 namespace SiteEvaluator.PageLoader;
 
-public class PageLoadResult: IEquatable<PageLoadResult>
+public class ContentLoadResult: IEquatable<ContentLoadResult>
 {
-    public PageLoadResult(string pageUrl)
+    public ContentLoadResult(string pageUrl)
     {
         PageUrl = pageUrl.EndsWith('/') ? pageUrl : pageUrl + '/';
     }
@@ -27,7 +27,7 @@ public class PageLoadResult: IEquatable<PageLoadResult>
         Content = await httpResponseMessage.Content.ReadAsStringAsync();
     }
 
-    public bool Equals(PageLoadResult? other)
+    public bool Equals(ContentLoadResult? other)
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -39,7 +39,7 @@ public class PageLoadResult: IEquatable<PageLoadResult>
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((PageLoadResult)obj);
+        return Equals((ContentLoadResult)obj);
     }
 
     public override int GetHashCode()

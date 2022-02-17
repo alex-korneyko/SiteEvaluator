@@ -5,11 +5,11 @@ namespace SiteEvaluator.PageLoader;
 
 public class HttpContentLoader : IHttpContentLoader
 {
-    public async Task<PageLoadResult> LoadContentAsync(string pageUrl)
+    public async Task<ContentLoadResult> LoadContentAsync(string pageUrl)
     {
         var stopwatch = new Stopwatch();
         using var httpClient = new HttpClient();
-        var pageLoadResult = new PageLoadResult(pageUrl);
+        var pageLoadResult = new ContentLoadResult(pageUrl);
 
         try
         {
@@ -36,7 +36,7 @@ public class HttpContentLoader : IHttpContentLoader
         return pageLoadResult;
     }
 
-    public async Task<PageLoadResult> LoadRobotsAsync(string hostUrl)
+    public async Task<ContentLoadResult> LoadRobotsAsync(string hostUrl)
     {
         var robotsUrl = (hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl) + "/robots.txt";
 
@@ -45,7 +45,7 @@ public class HttpContentLoader : IHttpContentLoader
         return loadRobotsResult;
     }
 
-    public async Task<PageLoadResult> LoadSiteMapAsync(string hostUrl)
+    public async Task<ContentLoadResult> LoadSiteMapAsync(string hostUrl)
     {
         var loadRobotsResult = await LoadRobotsAsync(hostUrl);
 
@@ -55,7 +55,7 @@ public class HttpContentLoader : IHttpContentLoader
         var indexOfSitemap = loadRobotsResult.Content.IndexOf("Sitemap:", StringComparison.InvariantCulture);
         if (indexOfSitemap == -1)
         {
-            return new PageLoadResult(hostUrl)
+            return new ContentLoadResult(hostUrl)
             {
                 HttpStatusCode = HttpStatusCode.NotFound
             };

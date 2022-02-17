@@ -9,7 +9,7 @@ namespace SiteEvaluator.Crawler;
 public class SiteCrawler : ISiteCrawler
 {
     private readonly IHttpContentLoader _httpContentLoader;
-    private readonly List<PageLoadResult> _result = new();
+    private readonly List<ContentLoadResult> _result = new();
     private readonly CrawlerSettings _settings = new();
 
     public SiteCrawler(IHttpContentLoader httpContentLoader)
@@ -22,7 +22,7 @@ public class SiteCrawler : ISiteCrawler
         crawlerSettings.Invoke(_settings);
     }
     
-    public async Task<IList<PageLoadResult>> CrawlAsync(string hostUrl)
+    public async Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl)
     {
         ConsoleMessage.WriteLineWarning("Start crawling...");
         
@@ -59,7 +59,7 @@ public class SiteCrawler : ISiteCrawler
             
             var fullUrl = GetFullUrl(aLinkTag, hostUrl);
 
-            if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new PageLoadResult(fullUrl)))
+            if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new ContentLoadResult(fullUrl)))
             {
                 continue;
             }
@@ -107,7 +107,7 @@ public class SiteCrawler : ISiteCrawler
         return hostUrl + aTag.Href;
     }
     
-    private static void PrintResult(List<PageLoadResult> result)
+    private static void PrintResult(List<ContentLoadResult> result)
     {
         ConsoleMessage.WriteLineSuccess("Crawling result:");
         foreach (var pageLoadResult in result)

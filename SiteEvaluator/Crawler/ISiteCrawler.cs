@@ -4,5 +4,5 @@ namespace SiteEvaluator.Crawler;
 
 public interface ISiteCrawler
 {
-    Task<IList<PageLoadResult>> CrawlAsync(string hostUrl);
+    Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl);
 }
