@@ -5,7 +5,7 @@ using SiteEvaluator.PageLoader;
 
 namespace SiteEvaluator.Presentation
 {
-    public static class ResultsComparer
+    public static class ListsManipulator
     {
         /**
      * Subtract list2 from list1
@@ -29,6 +29,24 @@ namespace SiteEvaluator.Presentation
             ConsoleMessage.WriteLineSuccess("Urls FOUNDED BY CRAWLING THE WEBSITE but not in sitemap.xml");
             subtractResultForCrawler.ForEach(item => Console.WriteLine(item.PageUrl));
             Console.WriteLine($"Total: {subtractResultForCrawler.Count}");
+        }
+        
+        public static IEnumerable<T> MultiSort<T>(params IEnumerable<T>[] lists) where T : IComparable<T>
+        {
+            return MultiSort(Comparer<T>.Default, lists);
+        }
+
+        public static IEnumerable<T> MultiSort<T>(IComparer<T>? comparer, params IEnumerable<T>[] lists)
+        {
+            var result = new List<T>();
+            foreach (var list in lists)
+            {
+                result.AddRange(list);
+            }
+            
+            result.Sort(comparer);
+
+            return result;
         }
     }
 }

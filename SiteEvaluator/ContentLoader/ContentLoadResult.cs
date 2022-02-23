@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SiteEvaluator.PageLoader
 {
-    public class ContentLoadResult : IEquatable<ContentLoadResult>
+    public class ContentLoadResult : IEquatable<ContentLoadResult>, IComparable<ContentLoadResult>
     {
         public ContentLoadResult(string pageUrl)
         {
@@ -55,6 +55,13 @@ namespace SiteEvaluator.PageLoader
             return IsSuccess
                 ? $"Page URL: {PageUrl}, Status code: {HttpStatusCode}, Page load time: {PageLoadTime}ms"
                 : $"Page URL: {PageUrl}, Is success: {IsSuccess}, Error message: {Exception?.Message}";
+        }
+
+        public int CompareTo(ContentLoadResult? other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            return PageLoadTime.CompareTo(other.PageLoadTime);
         }
     }
 }

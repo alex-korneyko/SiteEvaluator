@@ -43,24 +43,25 @@ if (siteMapExploreResult.IsSuccess)
         .Select(url => new ContentLoadResult(url.Loc!))
         .ToList();
     
-    ResultsComparer.DifferenceReport(crawlerResults, siteMapUrls);
+    ListsManipulator.DifferenceReport(crawlerResults, siteMapUrls);
     
-    var onlyInSiteMap = ResultsComparer.SubtractLists(siteMapUrls, crawlerResults)
+    var onlyInSiteMap = ListsManipulator.SubtractLists(siteMapUrls, crawlerResults)
         .Select(item => item.PageUrl);
     
-    var contentLoader = new HttpContentLoader();
     foreach (var url in onlyInSiteMap)
     {
-        pageLoadResultsForOnlyFromSiteMapLinks.Add(await contentLoader.LoadContentAsync(url));
+        pageLoadResultsForOnlyFromSiteMapLinks.Add(await httpContentLoader.LoadContentAsync(url));
     }
 
     finalReport.Append($"\nUrls found in sitemap: {siteMapExploreResult.SiteMap.UrlSet?.Length}");
 }
 
-ConsoleMessage.WriteLineSuccess("\nPages after crawling (timings):");
-crawlerResults.ToList().ForEach(Console.WriteLine);
-ConsoleMessage.WriteLineSuccess("Pages from sitemap.xml only (timings)");
-pageLoadResultsForOnlyFromSiteMapLinks.ForEach(Console.WriteLine);
+ConsoleMessage.WriteLineSuccess("\nList of pages sorted by loading time (ms):");
+var sorted = ListsManipulator.MultiSort(crawlerResults, pageLoadResultsForOnlyFromSiteMapLinks);
+foreach (var contentLoadResult in sorted)
+{
+    Console.WriteLine(contentLoadResult);
+}
 
-Console.WriteLine($"\n{finalReport}");
+Console.WriteLine($"\n{finalReport}\nPress Enter...");
 Console.ReadLine();
