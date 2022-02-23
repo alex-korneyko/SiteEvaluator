@@ -1,8 +1,9 @@
-﻿using SiteEvaluator.Xml;
+﻿using System.Threading.Tasks;
 
-namespace SiteEvaluator.SiteMapExplorer;
-
-public interface ISiteMapExplorer
+namespace SiteEvaluator.SiteMapExplorer
 {
-    Task<SiteMapExploreResult> ExploreAsync(string hostUrl);
+    public interface ISiteMapExplorer
+    {
+        Task<SiteMapExploreResult> ExploreAsync(string hostUrl);
+    }
 }

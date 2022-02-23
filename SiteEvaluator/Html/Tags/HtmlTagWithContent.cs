@@ -1,6 +1,7 @@
-﻿namespace SiteEvaluator.Html.Tags;
-
-public abstract class HtmlTagWithContent : HtmlTag
+﻿namespace SiteEvaluator.Html.Tags
 {
-    public string Content { get; set; } = string.Empty;
+    public abstract class HtmlTagWithContent : HtmlTag
+    {
+        public string Content { get; set; } = string.Empty;
+    }
 }

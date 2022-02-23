@@ -1,34 +1,35 @@
-﻿using System.Text;
-using System.Xml;
+﻿using System;
+using System.IO;
 using System.Xml.Serialization;
 
-namespace SiteEvaluator.Xml;
-
-public static class SiteMapSerializer
+namespace SiteEvaluator.Xml
 {
-    public static string Serialize()
+    public static class SiteMapSerializer
     {
-        throw new NotImplementedException();
-    }
-    
-    public static SiteMap Deserialize(string xmlString)
-    {
-        var xmlSerializer = new XmlSerializer(typeof(SiteMap));
+        public static string Serialize()
+        {
+            throw new NotImplementedException();
+        }
 
-        using var stream = GetStream(xmlString);
+        public static SiteMap Deserialize(string xmlString)
+        {
+            var xmlSerializer = new XmlSerializer(typeof(SiteMap));
 
-        var deserialize = (SiteMap)xmlSerializer.Deserialize(stream)!;
+            using var stream = GetStream(xmlString);
 
-        return deserialize;
-    }
+            var deserialize = (SiteMap)xmlSerializer.Deserialize(stream)!;
 
-    private static Stream GetStream(string value)
-    {
-        var memoryStream = new MemoryStream();
-        var streamWriter = new StreamWriter(memoryStream);
-        streamWriter.Write(value);
-        streamWriter.Flush();
-        memoryStream.Position = 0;
-        return memoryStream;
+            return deserialize;
+        }
+
+        private static Stream GetStream(string value)
+        {
+            var memoryStream = new MemoryStream();
+            var streamWriter = new StreamWriter(memoryStream);
+            streamWriter.Write(value);
+            streamWriter.Flush();
+            memoryStream.Position = 0;
+            return memoryStream;
+        }
     }
 }

@@ -1,6 +1,7 @@
-﻿namespace SiteEvaluator.SiteMapExplorer;
-
-public class SiteMapExplorerSettings
+﻿namespace SiteEvaluator.SiteMapExplorer
 {
-    public bool PrintResult { get; set; }
+    public class SiteMapExplorerSettings
+    {
+        public bool PrintResult { get; set; }
+    }
 }

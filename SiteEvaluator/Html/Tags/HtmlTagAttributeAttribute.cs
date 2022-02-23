@@ -1,16 +1,19 @@
-﻿namespace SiteEvaluator.Html.Tags;
+﻿using System;
 
-[AttributeUsage(AttributeTargets.Property)]
-public class HtmlTagAttributeAttribute : Attribute
+namespace SiteEvaluator.Html.Tags
 {
-    public string AttributeName { get; } = string.Empty;
-
-    public HtmlTagAttributeAttribute()
+    [AttributeUsage(AttributeTargets.Property)]
+    public class HtmlTagAttributeAttribute : Attribute
     {
-    }
+        public string AttributeName { get; } = string.Empty;
 
-    public HtmlTagAttributeAttribute(string attributeName)
-    {
-        AttributeName = attributeName;
+        public HtmlTagAttributeAttribute()
+        {
+        }
+
+        public HtmlTagAttributeAttribute(string attributeName)
+        {
+            AttributeName = attributeName;
+        }
     }
 }

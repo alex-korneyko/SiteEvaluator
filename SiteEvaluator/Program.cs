@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using SiteEvaluator.Crawler;
 using SiteEvaluator.PageLoader;
 using SiteEvaluator.Presentation;
@@ -12,7 +15,7 @@ var httpContentLoader = new HttpContentLoader();
 ISiteCrawler siteCrawler = new SiteCrawler(httpContentLoader, settings =>
 {
     settings.IncludeNofollowLinks = false;
-    settings.LogToConsole = false;
+    settings.LogToConsole = true;
     settings.PrintResult = false;
 });
 
@@ -60,3 +63,4 @@ ConsoleMessage.WriteLineSuccess("Pages from sitemap.xml only (timings)");
 pageLoadResultsForOnlyFromSiteMapLinks.ForEach(Console.WriteLine);
 
 Console.WriteLine($"\n{finalReport}");
+Console.ReadLine();

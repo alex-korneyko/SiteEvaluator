@@ -1,32 +1,34 @@
-﻿using SiteEvaluator.Xml;
+﻿using System;
+using SiteEvaluator.Xml;
 
-namespace SiteEvaluator.SiteMapExplorer;
-
-public class SiteMapExploreResult
+namespace SiteEvaluator.SiteMapExplorer
 {
-    public SiteMap SiteMap { get; } = new();
-
-    public bool IsSuccess { get; }
-
-    public Exception? Exception { get; }
-
-    public string ErrorMessage { get; set; } = string.Empty;
-
-    public SiteMapExploreResult(SiteMap siteMap)
+    public class SiteMapExploreResult
     {
-        SiteMap = siteMap;
-        IsSuccess = true;
-    }
+        public SiteMap SiteMap { get; } = new();
 
-    public SiteMapExploreResult(Exception? exception)
-    {
-        Exception = exception;
-        IsSuccess = false;
-    }
+        public bool IsSuccess { get; }
 
-    public SiteMapExploreResult(string errorMessage)
-    {
-        ErrorMessage = errorMessage;
-        IsSuccess = false;
+        public Exception? Exception { get; }
+
+        public string ErrorMessage { get; set; } = string.Empty;
+
+        public SiteMapExploreResult(SiteMap siteMap)
+        {
+            SiteMap = siteMap;
+            IsSuccess = true;
+        }
+
+        public SiteMapExploreResult(Exception? exception)
+        {
+            Exception = exception;
+            IsSuccess = false;
+        }
+
+        public SiteMapExploreResult(string errorMessage)
+        {
+            ErrorMessage = errorMessage;
+            IsSuccess = false;
+        }
     }
 }

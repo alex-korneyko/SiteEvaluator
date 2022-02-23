@@ -1,8 +1,11 @@
-﻿namespace SiteEvaluator.PageLoader;
+﻿using System.Threading.Tasks;
 
-public interface IHttpContentLoader
+namespace SiteEvaluator.PageLoader
 {
-    Task<ContentLoadResult> LoadContentAsync(string pageUrl);
-    Task<ContentLoadResult> LoadRobotsAsync(string hostUrl);
-    Task<ContentLoadResult> LoadSiteMapAsync(string hostUrl);
+    public interface IHttpContentLoader
+    {
+        Task<ContentLoadResult> LoadContentAsync(string pageUrl);
+        Task<ContentLoadResult> LoadRobotsAsync(string hostUrl);
+        Task<ContentLoadResult> LoadSiteMapAsync(string hostUrl);
+    }
 }

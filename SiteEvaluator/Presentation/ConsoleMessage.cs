@@ -1,28 +1,31 @@
-﻿namespace SiteEvaluator.Presentation;
+﻿using System;
 
-public static class ConsoleMessage
+namespace SiteEvaluator.Presentation
 {
-    public static void WriteLineError(string value)
+    public static class ConsoleMessage
     {
-        var defaultColor = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine(value);
-        Console.ForegroundColor = defaultColor;
-    }
-    
-    public static void WriteLineWarning(string value)
-    {
-        var defaultColor = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine(value);
-        Console.ForegroundColor = defaultColor;
-    }
-    
-    public static void WriteLineSuccess(string value)
-    {
-        var defaultColor = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine(value);
-        Console.ForegroundColor = defaultColor;
+        public static void WriteLineError(string value)
+        {
+            var defaultColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(value);
+            Console.ForegroundColor = defaultColor;
+        }
+
+        public static void WriteLineWarning(string value)
+        {
+            var defaultColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(value);
+            Console.ForegroundColor = defaultColor;
+        }
+
+        public static void WriteLineSuccess(string value)
+        {
+            var defaultColor = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine(value);
+            Console.ForegroundColor = defaultColor;
+        }
     }
 }

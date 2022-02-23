@@ -1,8 +1,11 @@
-﻿using SiteEvaluator.PageLoader;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using SiteEvaluator.PageLoader;
 
-namespace SiteEvaluator.Crawler;
-
-public interface ISiteCrawler
+namespace SiteEvaluator.Crawler
 {
-    Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl);
+    public interface ISiteCrawler
+    {
+        Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl);
+    }
 }

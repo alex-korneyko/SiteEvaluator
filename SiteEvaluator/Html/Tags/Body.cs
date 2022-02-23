@@ -1,9 +1,10 @@
-﻿namespace SiteEvaluator.Html.Tags;
-
-/**
- * Class that represents HTML 'body' tag
- */
-public class Body : HtmlTagWithContent
+﻿namespace SiteEvaluator.Html.Tags
 {
-    protected override string Name => "body";
+    /**
+     * Class that represents HTML 'body' tag
+     */
+    public class Body : HtmlTagWithContent
+    {
+        protected override string Name => "body";
+    }
 }
