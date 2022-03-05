@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Crawler;
@@ -11,7 +12,7 @@ Console.Write("Please, enter host URL for evaluate: ");
 var hostUrl = Console.ReadLine();
 if (hostUrl == null) return;
 
-var httpContentLoader = new HttpContentLoader();
+var httpContentLoader = new HttpContentLoader(new HttpClient());
 ISiteCrawler siteCrawler = new SiteCrawler(httpContentLoader, settings =>
 {
     settings.IncludeNofollowLinks = false;

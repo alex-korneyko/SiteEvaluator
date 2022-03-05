@@ -8,10 +8,16 @@ namespace SiteEvaluator.ContentLoader
 {
     public class HttpContentLoader : IHttpContentLoader
     {
+        private readonly HttpClient _httpClient;
+
+        public HttpContentLoader(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
         public async Task<ContentLoadResult> LoadContentAsync(string pageUrl)
         {
             var stopwatch = new Stopwatch();
-            using var httpClient = new HttpClient();
             var pageLoadResult = new ContentLoadResult(pageUrl);
 
             try
@@ -20,7 +26,7 @@ namespace SiteEvaluator.ContentLoader
                     throw new ArgumentException($"Wrong URL: {pageUrl}");
 
                 stopwatch.Start();
-                var httpResponseMessage = await httpClient.GetAsync(pageUrl);
+                var httpResponseMessage = await _httpClient.GetAsync(pageUrl);
                 stopwatch.Stop();
 
                 pageLoadResult.PageLoadTime = stopwatch.ElapsedMilliseconds;
