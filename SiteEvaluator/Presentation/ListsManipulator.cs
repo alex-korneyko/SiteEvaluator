@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SiteEvaluator.PageLoader;
+using SiteEvaluator.ContentLoader;
 
 namespace SiteEvaluator.Presentation
 {

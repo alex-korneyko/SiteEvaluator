@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using SiteEvaluator.PageLoader;
+using SiteEvaluator.ContentLoader;
 
 namespace SiteEvaluator.Crawler
 {

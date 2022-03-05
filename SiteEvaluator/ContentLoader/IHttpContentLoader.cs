@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace SiteEvaluator.PageLoader
+namespace SiteEvaluator.ContentLoader
 {
     public interface IHttpContentLoader
     {

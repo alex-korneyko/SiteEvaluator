@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
-using SiteEvaluator.PageLoader;
+using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.Xml;
 
