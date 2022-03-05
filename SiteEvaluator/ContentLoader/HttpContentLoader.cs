@@ -22,7 +22,7 @@ namespace SiteEvaluator.ContentLoader
 
             try
             {
-                if (!pageUrl.StartsWith("http://") && !pageUrl.StartsWith("https://") || !pageUrl.Contains('.'))
+                if (!pageUrl.StartsWith("http://") && !pageUrl.StartsWith("https://"))
                     throw new ArgumentException($"Wrong URL: {pageUrl}");
 
                 stopwatch.Start();
