@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Crawler;
-using SiteEvaluator.PageLoader;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExplorer;
 

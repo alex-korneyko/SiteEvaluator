@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace SiteEvaluator.PageLoader
+namespace SiteEvaluator.ContentLoader
 {
     public class HttpContentLoader : IHttpContentLoader
     {
