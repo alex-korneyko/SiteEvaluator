@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -50,6 +51,76 @@ namespace SiteEvaluator.Tests
             Assert.IsType<ArgumentException>(contentLoadResult.Exception);
         }
         
+        [Fact]
+        public async Task LoadRobotsAsync_UrlString_ShouldReturnContentLoadResult()
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When("https://localhost/robots.txt")
+                .Respond("text/html", GetRobotsTxtWithSitemapUrlInLastLine());
+
+            var httpClient = mockHttp.ToHttpClient();
+
+            var httpContentLoader = new HttpContentLoader(httpClient);
+            var contentLoadResult = await httpContentLoader.LoadRobotsAsync("https://localhost");
+            
+            Assert.True(contentLoadResult.IsSuccess);
+            Assert.Equal(GetRobotsTxtWithSitemapUrlInLastLine(), contentLoadResult.Content);
+        }
         
+        [Theory]
+        [MemberData(nameof(Data))]
+        public async Task LoadSiteMapAsync_UrlString_ShouldReturnContentLoadResult(
+            string robotsContent, 
+            HttpStatusCode expectedStatusCode, 
+            string sitemapContent)
+        {
+            var mockHttp = new MockHttpMessageHandler();
+            mockHttp
+                .When("https://localhost/robots.txt")
+                .Respond("text/html", robotsContent);
+
+            mockHttp
+                .When("https://localhost/serviceInformation/sitemap.xml")
+                .Respond("text/html", sitemapContent);
+            
+            var httpClient = mockHttp.ToHttpClient();
+
+            var httpContentLoader = new HttpContentLoader(httpClient);
+            var contentLoadResult = await httpContentLoader.LoadSiteMapAsync("https://localhost");
+            
+            Assert.True(contentLoadResult.IsSuccess);
+            Assert.Equal(expectedStatusCode, contentLoadResult.HttpStatusCode);
+            Assert.Equal(sitemapContent, contentLoadResult.Content);
+        }
+        
+        public static IEnumerable<object[]> Data => new List<object[]>
+        {
+            new object[] {GetRobotsTxtWithSitemapUrlInLastLine(), HttpStatusCode.OK, "Sitemap test content"},
+            new object[] {GetRobotsTxtWithSitemapUrlInFirsLine(), HttpStatusCode.OK, "Sitemap test content"},
+            new object[] {GetRobotsTxtWithoutSitemapUrl(), HttpStatusCode.NotFound, ""},
+        };
+
+        #region TestData
+
+        private static string GetRobotsTxtWithoutSitemapUrl()
+        {
+            return "\nUser-agent: *" +
+                   "\nAllow: /" +
+                   "\nDisallow: /cookie-policy" +
+                   "\nDisallow: /contacts";
+        }
+        
+        private static string GetRobotsTxtWithSitemapUrlInLastLine()
+        {
+            return  GetRobotsTxtWithoutSitemapUrl() + "\nSitemap: https://localhost/serviceInformation/sitemap.xml";
+        }
+        
+        private static string GetRobotsTxtWithSitemapUrlInFirsLine()
+        {
+            return  "\nSitemap: https://localhost/serviceInformation/sitemap.xml" + GetRobotsTxtWithoutSitemapUrl();
+        }
+        
+        #endregion
     }
 }
