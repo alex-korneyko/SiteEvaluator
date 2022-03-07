@@ -72,7 +72,8 @@ namespace SiteEvaluator.Tests
         [MemberData(nameof(Data))]
         public async Task LoadSiteMapAsync_UrlString_ShouldReturnContentLoadResult(
             string robotsContent, 
-            HttpStatusCode expectedStatusCode, 
+            HttpStatusCode expectedStatusCode,
+            HttpStatusCode actualStatusCode,
             string sitemapContent)
         {
             var mockHttp = new MockHttpMessageHandler();
@@ -82,7 +83,7 @@ namespace SiteEvaluator.Tests
 
             mockHttp
                 .When("https://localhost/serviceInformation/sitemap.xml")
-                .Respond("text/html", sitemapContent);
+                .Respond(actualStatusCode, "text/html", sitemapContent);
             
             var httpClient = mockHttp.ToHttpClient();
 
@@ -96,9 +97,11 @@ namespace SiteEvaluator.Tests
         
         public static IEnumerable<object[]> Data => new List<object[]>
         {
-            new object[] {GetRobotsTxtWithSitemapUrlInLastLine(), HttpStatusCode.OK, "Sitemap test content"},
-            new object[] {GetRobotsTxtWithSitemapUrlInFirsLine(), HttpStatusCode.OK, "Sitemap test content"},
-            new object[] {GetRobotsTxtWithoutSitemapUrl(), HttpStatusCode.NotFound, ""},
+            new object[] {GetRobotsTxtWithSitemapUrlInLastLine(), HttpStatusCode.OK,  HttpStatusCode.OK, "Sitemap test content"},
+            new object[] {GetRobotsTxtWithSitemapUrlInFirsLine(), HttpStatusCode.OK, HttpStatusCode.OK, "Sitemap test content"},
+            //Sitemap URL present in robots.txt but page sitemap.xml actually missing
+            new object[] {GetRobotsTxtWithSitemapUrlInFirsLine(), HttpStatusCode.NotFound, HttpStatusCode.NotFound, ""},
+            new object[] {GetRobotsTxtWithoutSitemapUrl(), HttpStatusCode.NotFound, HttpStatusCode.NotFound, ""},
         };
 
         #region TestData
