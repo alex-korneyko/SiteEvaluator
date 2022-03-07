@@ -21,12 +21,13 @@ namespace SiteEvaluator.Tests
             string content, 
             HttpStatusCode statusCode)
         {
-            var mockHttp = new MockHttpMessageHandler();
-            mockHttp
-                .When(targetUrl)
-                .Respond("text/html", content);
+            var mockHttpMessageHandler = new MockHttpMessageHandler();
 
-            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttp));
+            mockHttpMessageHandler
+                .Setup(targetUrl)
+                .Returns(content, "text/html");
+            
+            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
 
             var contentLoadResult = await httpContentLoader.LoadContentAsync(requestUrl);
             
@@ -40,7 +41,7 @@ namespace SiteEvaluator.Tests
         [InlineData("aaa.aa")]
         public async Task LoadContentAsync_WrongUrl_ShouldReturnContentLoadResultWithException(string url)
         {
-            var mockHttp = new MockHttpMessageHandler();
+            var mockHttp = new RichardSzalay.MockHttp.MockHttpMessageHandler();
             mockHttp.When(url);
 
             var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttp));
@@ -54,7 +55,7 @@ namespace SiteEvaluator.Tests
         [Fact]
         public async Task LoadRobotsAsync_UrlString_ShouldReturnContentLoadResult()
         {
-            var mockHttp = new MockHttpMessageHandler();
+            var mockHttp = new RichardSzalay.MockHttp.MockHttpMessageHandler();
             mockHttp
                 .When("https://localhost/robots.txt")
                 .Respond("text/html", GetRobotsTxtWithSitemapUrlInLastLine());
@@ -76,24 +77,35 @@ namespace SiteEvaluator.Tests
             HttpStatusCode actualStatusCode,
             string sitemapContent)
         {
-            var mockHttp = new MockHttpMessageHandler();
-            mockHttp
-                .When("https://localhost/robots.txt")
-                .Respond("text/html", robotsContent);
+            // var mockHttp = new RichardSzalay.MockHttp.MockHttpMessageHandler();
+            // mockHttp
+            //     .When("https://localhost/robots.txt")
+            //     .Respond("text/html", robotsContent);
+            //
+            // mockHttp
+            //     .When("https://localhost/serviceInformation/sitemap.xml")
+            //     .Respond(actualStatusCode, "text/html", sitemapContent);
 
-            mockHttp
-                .When("https://localhost/serviceInformation/sitemap.xml")
-                .Respond(actualStatusCode, "text/html", sitemapContent);
+            var mockHttpMessageHandler = new MockHttpMessageHandler();
+            mockHttpMessageHandler
+                .Setup("https://localhost/robots.txt")
+                .Returns(robotsContent, "text/html");
             
-            var httpClient = mockHttp.ToHttpClient();
+            mockHttpMessageHandler
+                .Setup("https://localhost/serviceInformation/sitemap.xml")
+                .Returns(sitemapContent, "text/html");
 
-            var httpContentLoader = new HttpContentLoader(httpClient);
+            // var httpClient = mockHttp.ToHttpClient();
+
+            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
             var contentLoadResult = await httpContentLoader.LoadSiteMapAsync("https://localhost");
             
             Assert.True(contentLoadResult.IsSuccess);
             Assert.Equal(expectedStatusCode, contentLoadResult.HttpStatusCode);
             Assert.Equal(sitemapContent, contentLoadResult.Content);
         }
+        
+        #region TestData
         
         public static IEnumerable<object[]> Data => new List<object[]>
         {
@@ -103,8 +115,6 @@ namespace SiteEvaluator.Tests
             new object[] {GetRobotsTxtWithSitemapUrlInFirsLine(), HttpStatusCode.NotFound, HttpStatusCode.NotFound, ""},
             new object[] {GetRobotsTxtWithoutSitemapUrl(), HttpStatusCode.NotFound, HttpStatusCode.NotFound, ""},
         };
-
-        #region TestData
 
         private static string GetRobotsTxtWithoutSitemapUrl()
         {
