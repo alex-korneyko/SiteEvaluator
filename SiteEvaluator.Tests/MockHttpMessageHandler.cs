@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -8,50 +9,76 @@ namespace SiteEvaluator.Tests
 {
     public class MockHttpMessageHandler : HttpMessageHandler
     {
-        private readonly MockHttpMessageHandlerSettings _settings = new();
+        private readonly Dictionary<string, Response> _requestResponseSet = new();
         
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var httpResponseMessage = new HttpResponseMessage(_settings.TargetUri == request.RequestUri?.AbsoluteUri ? HttpStatusCode.OK : HttpStatusCode.NotFound);
-            httpResponseMessage.Content = new StringContent(_settings.ResponseContent, Encoding.UTF8, _settings.ResponseMediaType);
+            var httpResponseMessage = new HttpResponseMessage(HttpStatusCode.OK);
+            
+            if (string.IsNullOrEmpty(request.RequestUri?.OriginalString))
+            {
+                return Task.FromResult(httpResponseMessage);
+            }
+
+            var response = _requestResponseSet.GetValueOrDefault(request.RequestUri.OriginalString);
+
+            if (response == null)
+            {
+                httpResponseMessage.StatusCode = HttpStatusCode.NotFound;
+                return Task.FromResult(httpResponseMessage);
+            }
+
+            httpResponseMessage.StatusCode = response.ResponseHttpStatusCode;
+            httpResponseMessage.Content = new StringContent(response.ResponseContent, Encoding.UTF8, response.ResponseMediaType);
+            
             return Task.FromResult(httpResponseMessage);
         }
         
         public MockHttpMessageHandlerSetupResult Setup(string targetUri)
         {
-            _settings.TargetUri = targetUri;
+            _requestResponseSet.Add(targetUri, new Response());
 
-            return new MockHttpMessageHandlerSetupResult(_settings);
+            return new MockHttpMessageHandlerSetupResult(targetUri, _requestResponseSet);
         }
-    }
-
-    public class MockHttpMessageHandlerSettings
-    {
-        private string _targetUri;
-        
-        public string TargetUri
-        {
-            get => _targetUri;
-            set => _targetUri = value.EndsWith('/') ? value : value + "/";
-        }
-
-        public string ResponseMediaType { get; set; } = "text/html";
-        public string ResponseContent { get; set; }
     }
 
     public class MockHttpMessageHandlerSetupResult
     {
-        private readonly MockHttpMessageHandlerSettings _settings;
+        private readonly string _targetUri;
+        private readonly Dictionary<string, Response> _requestResponseSet;
 
-        public MockHttpMessageHandlerSetupResult(MockHttpMessageHandlerSettings settings)
+        public MockHttpMessageHandlerSetupResult(string targetUri, Dictionary<string, Response> requestResponseSet)
         {
-            _settings = settings;
+            _targetUri = targetUri;
+            _requestResponseSet = requestResponseSet;
         }
 
-        public void Returns(string responseContent, string responseMediaType)
+        public void Returns(
+            string responseContent, 
+            string responseMediaType = "text/html", 
+            HttpStatusCode responseHttpStatusCode = HttpStatusCode.OK)
         {
-            _settings.ResponseContent = responseContent;
-            _settings.ResponseMediaType = responseMediaType;
+            var response = new Response(responseContent, responseMediaType, responseHttpStatusCode);
+
+            _requestResponseSet.Remove(_targetUri);
+            _requestResponseSet.Add(_targetUri, response);
+        }
+    }
+
+    public class Response
+    {
+        public string ResponseContent { get; }
+        public string ResponseMediaType { get; }
+        public HttpStatusCode ResponseHttpStatusCode { get; }
+
+        public Response(
+            string responseContent = "",
+            string responseMediaType = "text/html",
+            HttpStatusCode httpStatusCode = HttpStatusCode.OK)
+        {
+            ResponseContent = responseContent;
+            ResponseMediaType = responseMediaType;
+            ResponseHttpStatusCode = httpStatusCode;
         }
     }
 }

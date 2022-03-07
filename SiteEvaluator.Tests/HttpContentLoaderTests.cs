@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using RichardSzalay.MockHttp;
 using SiteEvaluator.ContentLoader;
 using Xunit;
 
@@ -25,7 +24,7 @@ namespace SiteEvaluator.Tests
 
             mockHttpMessageHandler
                 .Setup(targetUrl)
-                .Returns(content, "text/html");
+                .Returns(content);
             
             var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
 
@@ -41,10 +40,10 @@ namespace SiteEvaluator.Tests
         [InlineData("aaa.aa")]
         public async Task LoadContentAsync_WrongUrl_ShouldReturnContentLoadResultWithException(string url)
         {
-            var mockHttp = new RichardSzalay.MockHttp.MockHttpMessageHandler();
-            mockHttp.When(url);
+            var mockHttpMessageHandler = new MockHttpMessageHandler();
+            mockHttpMessageHandler.Setup(url);
 
-            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttp));
+            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
 
             var contentLoadResult = await httpContentLoader.LoadContentAsync(url);
 
@@ -55,14 +54,12 @@ namespace SiteEvaluator.Tests
         [Fact]
         public async Task LoadRobotsAsync_UrlString_ShouldReturnContentLoadResult()
         {
-            var mockHttp = new RichardSzalay.MockHttp.MockHttpMessageHandler();
-            mockHttp
-                .When("https://localhost/robots.txt")
-                .Respond("text/html", GetRobotsTxtWithSitemapUrlInLastLine());
-
-            var httpClient = mockHttp.ToHttpClient();
-
-            var httpContentLoader = new HttpContentLoader(httpClient);
+            var mockHttpMessageHandler = new MockHttpMessageHandler();
+            mockHttpMessageHandler
+                .Setup("https://localhost/robots.txt")
+                .Returns(GetRobotsTxtWithSitemapUrlInLastLine());
+            
+            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
             var contentLoadResult = await httpContentLoader.LoadRobotsAsync("https://localhost");
             
             Assert.True(contentLoadResult.IsSuccess);
@@ -77,25 +74,14 @@ namespace SiteEvaluator.Tests
             HttpStatusCode actualStatusCode,
             string sitemapContent)
         {
-            // var mockHttp = new RichardSzalay.MockHttp.MockHttpMessageHandler();
-            // mockHttp
-            //     .When("https://localhost/robots.txt")
-            //     .Respond("text/html", robotsContent);
-            //
-            // mockHttp
-            //     .When("https://localhost/serviceInformation/sitemap.xml")
-            //     .Respond(actualStatusCode, "text/html", sitemapContent);
-
             var mockHttpMessageHandler = new MockHttpMessageHandler();
             mockHttpMessageHandler
                 .Setup("https://localhost/robots.txt")
-                .Returns(robotsContent, "text/html");
+                .Returns(robotsContent);
             
             mockHttpMessageHandler
                 .Setup("https://localhost/serviceInformation/sitemap.xml")
-                .Returns(sitemapContent, "text/html");
-
-            // var httpClient = mockHttp.ToHttpClient();
+                .Returns(sitemapContent, "text/html", actualStatusCode);
 
             var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
             var contentLoadResult = await httpContentLoader.LoadSiteMapAsync("https://localhost");
@@ -111,7 +97,7 @@ namespace SiteEvaluator.Tests
         {
             new object[] {GetRobotsTxtWithSitemapUrlInLastLine(), HttpStatusCode.OK,  HttpStatusCode.OK, "Sitemap test content"},
             new object[] {GetRobotsTxtWithSitemapUrlInFirsLine(), HttpStatusCode.OK, HttpStatusCode.OK, "Sitemap test content"},
-            //Sitemap URL present in robots.txt but page sitemap.xml actually missing
+            //Sitemap URL in robots.txt but page sitemap.xml actually missing
             new object[] {GetRobotsTxtWithSitemapUrlInFirsLine(), HttpStatusCode.NotFound, HttpStatusCode.NotFound, ""},
             new object[] {GetRobotsTxtWithoutSitemapUrl(), HttpStatusCode.NotFound, HttpStatusCode.NotFound, ""},
         };
