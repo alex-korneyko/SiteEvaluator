@@ -70,7 +70,16 @@ namespace SiteEvaluator.ContentLoader
                 };
             }
 
-            var siteMapUrl = loadRobotsResult.Content.Substring(indexOfSitemap + "Sitemap:".Length).Trim();
+            var indexOfEndOfSitemapUrl = loadRobotsResult.Content.IndexOf('\n', indexOfSitemap);
+            
+            indexOfEndOfSitemapUrl = indexOfEndOfSitemapUrl == -1
+                ? loadRobotsResult.Content[indexOfSitemap..].Length
+                : indexOfEndOfSitemapUrl;
+
+            var sitemapWordLength = "Sitemap:".Length;
+            var siteMapUrl = loadRobotsResult.Content
+                .Substring(indexOfSitemap + sitemapWordLength, indexOfEndOfSitemapUrl - sitemapWordLength)
+                .Trim();
 
             var siteMapLoadResult = await LoadContentAsync(siteMapUrl);
 
