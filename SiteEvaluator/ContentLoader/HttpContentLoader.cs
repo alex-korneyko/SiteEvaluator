@@ -31,7 +31,7 @@ namespace SiteEvaluator.ContentLoader
 
                 pageLoadResult.PageLoadTime = stopwatch.ElapsedMilliseconds;
 
-                await pageLoadResult.ApplyHttpResponse(httpResponseMessage);
+                await pageLoadResult.ApplyHttpResponseAsync(httpResponseMessage);
             }
             catch (Exception e)
             {

@@ -31,19 +31,13 @@ namespace SiteEvaluator.SiteMapExplorer
 
             if (!loadSiteMapResult.IsSuccess)
                 return new SiteMapExploreResult(loadSiteMapResult.Exception);
+            
             if (loadSiteMapResult.HttpStatusCode != HttpStatusCode.OK)
-            {
-                var message = $"Http status code: {loadSiteMapResult.HttpStatusCode}; " +
-                              $"Requested url: {loadSiteMapResult.PageUrl}";
+                return HttpStatusNotOk(loadSiteMapResult);
 
-                ConsoleMessage.WriteLineError(message);
-                return new SiteMapExploreResult(message);
-            }
-
-            var siteMapString = loadSiteMapResult.Content;
             try
             {
-                var siteMap = SiteMapSerializer.Deserialize(siteMapString);
+                var siteMap = SiteMapSerializer.Deserialize(loadSiteMapResult.Content);
                 ConsoleMessage.WriteLineSuccess("sitemap.xml explored!");
                 if (_settings.PrintResult) PrintToConsole(siteMap);
 
@@ -63,8 +57,19 @@ namespace SiteEvaluator.SiteMapExplorer
             ConsoleMessage.WriteLineSuccess("sitemap.xml exploring result: ");
             foreach (var url in siteMap.UrlSet)
             {
-                Console.WriteLine($"loc: {url.Loc}\tlastmod: {url.LastMod}");
+                Console.WriteLine($"loc: {url.Loc}\tlastmod: {url.LastMod}\tchangefreq: " +
+                                  $"{url.Changefreq}\tpriority: {url.Priority}");
             }
+        }
+        
+        private static SiteMapExploreResult HttpStatusNotOk(ContentLoadResult contentLoadResult)
+        {
+            var message = $"Http status code: {contentLoadResult.HttpStatusCode}; " +
+                          $"Requested url: {contentLoadResult.PageUrl}";
+
+            ConsoleMessage.WriteLineError(message);
+
+            return new SiteMapExploreResult(message);
         }
     }
 }

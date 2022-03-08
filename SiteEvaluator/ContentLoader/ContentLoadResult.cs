@@ -24,7 +24,7 @@ namespace SiteEvaluator.ContentLoader
 
         public Exception? Exception { get; set; }
 
-        public async Task ApplyHttpResponse(HttpResponseMessage httpResponseMessage)
+        public async Task ApplyHttpResponseAsync(HttpResponseMessage httpResponseMessage)
         {
             HttpStatusCode = httpResponseMessage.StatusCode;
             Content = await httpResponseMessage.Content.ReadAsStringAsync();
