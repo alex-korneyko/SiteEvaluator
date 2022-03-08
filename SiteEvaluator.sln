@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator", "SiteEvalua
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.Tests", "SiteEvaluator.Tests\SiteEvaluator.Tests.csproj", "{80F403DA-B15C-4460-B125-A91DA4B90C8D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MockHttp", "MockHttp\MockHttp.csproj", "{D8424124-8930-4C55-A60E-19026DDBC530}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E0BCE084-4438-4680-956A-7DE9CFE1211F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{80F403DA-B15C-4460-B125-A91DA4B90C8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{80F403DA-B15C-4460-B125-A91DA4B90C8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{80F403DA-B15C-4460-B125-A91DA4B90C8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8424124-8930-4C55-A60E-19026DDBC530}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8424124-8930-4C55-A60E-19026DDBC530}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8424124-8930-4C55-A60E-19026DDBC530}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8424124-8930-4C55-A60E-19026DDBC530}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D8424124-8930-4C55-A60E-19026DDBC530} = {E0BCE084-4438-4680-956A-7DE9CFE1211F}
+		{80F403DA-B15C-4460-B125-A91DA4B90C8D} = {E0BCE084-4438-4680-956A-7DE9CFE1211F}
 	EndGlobalSection
 EndGlobal

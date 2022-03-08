@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SiteEvaluator.Tests.MockHttp
+namespace MockHttp
 {
     public class MockHttpMessageHandler : HttpMessageHandler
     {

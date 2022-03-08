@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using SiteEvaluator.ContentLoader;
-using SiteEvaluator.Tests.MockHttp;
+using MockHttp;
 using Xunit;
 
 namespace SiteEvaluator.Tests

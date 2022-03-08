@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 
-namespace SiteEvaluator.Tests.MockHttp
+namespace MockHttp
 {
     public class MockHttpMessageHandlerSetupResult
     {
