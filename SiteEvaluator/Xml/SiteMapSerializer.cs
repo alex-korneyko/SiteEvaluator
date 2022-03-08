@@ -17,9 +17,15 @@ namespace SiteEvaluator.Xml
 
             using var stream = GetStream(xmlString);
 
-            var deserialize = (SiteMap)xmlSerializer.Deserialize(stream)!;
-
-            return deserialize;
+            try
+            {
+                var deserialize = (SiteMap)xmlSerializer.Deserialize(stream)!;
+                return deserialize;
+            }
+            catch (InvalidOperationException e)
+            {
+                return new SiteMap();
+            }
         }
 
         private static Stream GetStream(string value)
