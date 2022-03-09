@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Moq;
 using SiteEvaluator.ContentLoader;
+using SiteEvaluator.SiteMapExploring;
 using Xunit;
 
 namespace SiteEvaluator.Tests
@@ -21,17 +22,17 @@ namespace SiteEvaluator.Tests
                 .Returns(Task.FromResult(GetContentLoadResult(hostUrl, sitemapXmlString)));
             
 
-            var siteMapExplorer = new SiteMapExplorer.SiteMapExplorer(mockHttpContentLoader.Object);
+            var siteMapExplorer = new SiteMapExplorer(mockHttpContentLoader.Object);
 
-            var siteMapExploreResult = await siteMapExplorer.ExploreAsync(hostUrl);
+            var siteMapExploreResult = await siteMapExplorer.ExploreAsync(hostUrl, false);
             
             Assert.NotNull(siteMapExploreResult);
-            Assert.Equal(urlSetIsNull, siteMapExploreResult.SiteMap.UrlSet == null);
-            if (siteMapExploreResult.SiteMap.UrlSet != null)
+            Assert.Equal(urlSetIsNull, siteMapExploreResult.Count == 0);
+            if (siteMapExploreResult.Count != 0)
             {
-                Assert.Equal(2, siteMapExploreResult.SiteMap.UrlSet.Length);
-                Assert.Contains(SitemapData.Url1, siteMapExploreResult.SiteMap.UrlSet);
-                Assert.Contains(SitemapData.Url2, siteMapExploreResult.SiteMap.UrlSet);
+                Assert.Equal(2, siteMapExploreResult.Count);
+                Assert.Contains( new ContentLoadResult(SitemapData.Url1!.Loc!), siteMapExploreResult);
+                Assert.Contains(new ContentLoadResult(SitemapData.Url2!.Loc!), siteMapExploreResult);
             }
         }
 
