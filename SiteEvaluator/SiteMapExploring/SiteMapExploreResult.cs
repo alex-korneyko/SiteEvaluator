@@ -1,7 +1,7 @@
 ﻿using System;
 using SiteEvaluator.Xml;
 
-namespace SiteEvaluator.SiteMapExplorer
+namespace SiteEvaluator.SiteMapExploring
 {
     public class SiteMapExploreResult
     {

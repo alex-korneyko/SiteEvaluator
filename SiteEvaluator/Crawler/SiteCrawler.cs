@@ -28,7 +28,7 @@ namespace SiteEvaluator.Crawler
 
         public async Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl)
         {
-            ConsoleMessage.WriteLineWarning("Start crawling...");
+            ConsoleController.WriteLine.Info("Start crawling...");
 
             hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
 
@@ -44,7 +44,7 @@ namespace SiteEvaluator.Crawler
 
             await ScanLinksAsync(pageBody, hostUrl);
 
-            ConsoleMessage.WriteLineSuccess("Crawling finished!");
+            ConsoleController.WriteLine.Success("Crawling finished!");
 
             if (_settings.PrintResult) PrintResult(_result);
 
@@ -63,17 +63,12 @@ namespace SiteEvaluator.Crawler
 
                 var fullUrl = GetFullUrl(aLinkTag, hostUrl);
 
-                if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new ContentLoadResult(fullUrl)))
-                {
-                    continue;
-                }
+                if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new ContentLoadResult(fullUrl))) continue;
 
-                if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow")
-                {
-                    continue;
-                }
+                if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow") continue;
 
-                if (_settings.LogToConsole) Console.Write($"Attempt to load : {aLinkTag.Href} ... ");
+                if (_settings.LogToConsole) 
+                    ConsoleController.WriteLine.Comment($"Attempt to load : {aLinkTag.Href} ... ");
 
                 var pageLoadResult = await _httpContentLoader.LoadContentAsync(fullUrl);
 
@@ -81,11 +76,11 @@ namespace SiteEvaluator.Crawler
 
                 if (!pageLoadResult.IsSuccess)
                 {
-                    ConsoleMessage.WriteLineError($"Page loading unsuccessful - {fullUrl}");
+                    ConsoleController.WriteLine.Error($"Page loading unsuccessful - {fullUrl}");
                     continue;
                 }
 
-                if (_settings.LogToConsole) ConsoleMessage.WriteLineSuccess(pageLoadResult.ToString());
+                if (_settings.LogToConsole) ConsoleController.WriteLine.Success($"\t{pageLoadResult}");
 
                 await ScanLinksAsync(pageLoadResult.Content, hostUrl);
             }
@@ -114,7 +109,7 @@ namespace SiteEvaluator.Crawler
 
         private static void PrintResult(List<ContentLoadResult> result)
         {
-            ConsoleMessage.WriteLineSuccess("Crawling result:");
+            ConsoleController.WriteLine.Success("Crawling result:");
             foreach (var pageLoadResult in result)
             {
                 Console.WriteLine(pageLoadResult);

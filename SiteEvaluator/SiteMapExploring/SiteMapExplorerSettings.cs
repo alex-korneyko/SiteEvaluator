@@ -1,4 +1,4 @@
-﻿namespace SiteEvaluator.SiteMapExplorer
+﻿namespace SiteEvaluator.SiteMapExploring
 {
     public class SiteMapExplorerSettings
     {
