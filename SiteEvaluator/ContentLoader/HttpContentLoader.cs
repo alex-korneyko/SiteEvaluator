@@ -66,7 +66,6 @@ namespace SiteEvaluator.ContentLoader
             {
                 return new ContentLoadResult(hostUrl)
                 {
-                    IsSuccess = false,
                     HttpStatusCode = HttpStatusCode.NotFound,
                 };
             }

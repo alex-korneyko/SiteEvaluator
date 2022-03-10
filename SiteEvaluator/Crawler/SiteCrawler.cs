@@ -6,7 +6,6 @@ using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Tags;
 using SiteEvaluator.Presentation;
-using SiteEvaluator.SiteMapExploring;
 
 namespace SiteEvaluator.Crawler
 {
@@ -34,6 +33,7 @@ namespace SiteEvaluator.Crawler
             hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
 
             var pageLoadResult = await _httpContentLoader.LoadContentAsync(hostUrl);
+            if (_settings.LogToConsole) PrintResultString(pageLoadResult);
             _result.Add(pageLoadResult);
 
             var pageBody = string.Empty;
@@ -80,7 +80,6 @@ namespace SiteEvaluator.Crawler
 
                 if (_settings.LogToConsole) PrintResultString(pageLoadResult);
 
-
                 await ScanLinksAsync(pageLoadResult.Content, hostUrl);
             }
         }
@@ -105,8 +104,9 @@ namespace SiteEvaluator.Crawler
                     break;
             }
             
-            ConsoleController.Write.Info($"; Content: '{contentLoadResult.ContentType}'");
-            ConsoleController.WriteLine.Info($"; Load time: {contentLoadResult.PageLoadTime}ms");
+            ConsoleController.Write.Info($"; Content type: '{contentLoadResult.ContentType}'");
+            ConsoleController.Write.Info($"; Load time: {contentLoadResult.PageLoadTime}ms");
+            ConsoleController.WriteLine.Info($"; Size: {Math.Round((float)contentLoadResult.Content.Length / 1024, 2)}Kb");
         }
 
         private string GetFullUrl(A aTag, string hostUrl)

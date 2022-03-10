@@ -12,19 +12,19 @@ namespace SiteEvaluator.Presentation
     {
         private readonly StringBuilder _reportString = new();
         private readonly List<ContentLoadResult> _crawlerResultsAllUniqLinks = new();
-        private readonly List<ContentLoadResult> _crawlerResultsAllHtmlPages = new();
+        private readonly List<ContentLoadResult> _summaryResultsAllHtmlPages = new();
         private readonly List<ContentLoadResult> _siteMapResults = new();
 
         public void AddCrawlerResults(IList<ContentLoadResult> crawlerResults)
         {
             _crawlerResultsAllUniqLinks.AddRange(crawlerResults);
-            _crawlerResultsAllHtmlPages.AddRange(FilterOnlyHtmlAnd2xx3xx(_crawlerResultsAllUniqLinks));
+            _summaryResultsAllHtmlPages.AddRange(FilterOnlyHtmlAnd2xx3xx(_crawlerResultsAllUniqLinks));
             
             _reportString
-                .Insert(0, $"Urls(html documents) found after crawling a website: {_crawlerResultsAllHtmlPages.Count}");
+                .Insert(0, $"Urls(html documents) found after crawling a website: {_summaryResultsAllHtmlPages.Count}");
 
             ConsoleController.WriteLine.Note(
-                $"Total crawled links: {crawlerResults.Count}; HTML-pages: {_crawlerResultsAllHtmlPages.Count}\n");
+                $"Total crawled links: {crawlerResults.Count}; HTML-pages: {_summaryResultsAllHtmlPages.Count}\n");
         }
 
         public void AddSiteMapExplorerResults(IList<ContentLoadResult> siteMapExploreResults)
@@ -37,18 +37,23 @@ namespace SiteEvaluator.Presentation
         
         public async Task ReportDifferences()
         {
-            var onlyInSiteMapResults = SubtractLists(_siteMapResults, _crawlerResultsAllHtmlPages).ToList();
-            var onlyInCrawlerResults = SubtractLists(_crawlerResultsAllHtmlPages, _siteMapResults).ToList();
+            var onlyInSiteMapResults = _siteMapResults
+                .Where(result => !_summaryResultsAllHtmlPages.Contains(result))
+                .ToList();
+            
+            var onlyInCrawlerResults = _summaryResultsAllHtmlPages
+                .Where(result => !_siteMapResults.Contains(result))
+                .ToList();
 
             ReportExclusive(onlyInSiteMapResults, "Urls FOUNDED IN SITEMAP.XML but not founded after crawling a web site");
             ReportExclusive(onlyInCrawlerResults, "Urls FOUNDED BY CRAWLING THE WEBSITE but not in sitemap.xml");
-            
-            ConsoleController.WriteLine.Success("\nList of pages sorted by loading time (ms):");
-            
+
             var onlyInSiteMapResultsWithContent = await LoadPagesContentAsync(onlyInSiteMapResults);
-            var contentLoadResults = JoinSort(_crawlerResultsAllHtmlPages, onlyInSiteMapResultsWithContent);
-            
-            foreach (var contentLoadResult in contentLoadResults)
+            _summaryResultsAllHtmlPages.AddRange(onlyInSiteMapResultsWithContent);
+            _summaryResultsAllHtmlPages.Sort();
+
+            ConsoleController.WriteLine.Success("\nList of pages sorted by loading time (ms):");
+            foreach (var contentLoadResult in _summaryResultsAllHtmlPages)
             {
                 Console.WriteLine(contentLoadResult);
             }
@@ -76,27 +81,11 @@ namespace SiteEvaluator.Presentation
         private static void ReportExclusive(List<ContentLoadResult> contentLoadResults, string header)
         {
             ConsoleController.WriteLine.Success(header);
-            contentLoadResults.ForEach(item => Console.WriteLine(item.PageUrl));
-            ConsoleController.WriteLine.Note($"Total: {contentLoadResults.Count}\n");
-        }
-        
-        private static IEnumerable<T> SubtractLists<T>(IEnumerable<T> list1, IEnumerable<T> list2)
-            where T : IEquatable<T>
-        {
-            return list1.Where(item => !list2.Contains(item));
-        }
-
-        private static IEnumerable<T> JoinSort<T>(params IEnumerable<T>[] lists)
-        {
-            var result = new List<T>();
-            foreach (var list in lists)
-            {
-                result.AddRange(list);
-            }
             
-            result.Sort();
-
-            return result;
+            foreach (var item in contentLoadResults)
+                Console.WriteLine(item.PageUrl);
+            
+            ConsoleController.WriteLine.Note($"Total: {contentLoadResults.Count()}\n");
         }
         
         private static IEnumerable<ContentLoadResult> FilterOnlyHtmlAnd2xx3xx(IEnumerable<ContentLoadResult> values)

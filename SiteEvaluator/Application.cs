@@ -19,8 +19,12 @@ namespace SiteEvaluator
         public async Task StartAsync(params string[] args)
         {
             var report = new Report();
-            
-            var hostUrl = ConsoleController.ReadLine.Warning("Please, enter host URL for evaluate: ");
+
+            var hostUrl = args.Length == 0 
+                ? ConsoleController.ReadLine.Warning("Please, enter host URL for evaluate: ")
+                : args[0];
+
+            if (hostUrl.Equals("")) hostUrl = "https://www.ukad-group.com/";
 
             var siteCrawlerResults = await _siteCrawler.CrawlAsync(hostUrl);
             report.AddCrawlerResults(siteCrawlerResults);
