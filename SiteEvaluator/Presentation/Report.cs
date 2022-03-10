@@ -11,15 +11,20 @@ namespace SiteEvaluator.Presentation
     public class Report
     {
         private readonly StringBuilder _reportString = new();
-        private readonly List<ContentLoadResult> _crawlerResults = new();
+        private readonly List<ContentLoadResult> _crawlerResultsAllUniqLinks = new();
+        private readonly List<ContentLoadResult> _crawlerResultsAllHtmlPages = new();
         private readonly List<ContentLoadResult> _siteMapResults = new();
 
         public void AddCrawlerResults(IList<ContentLoadResult> crawlerResults)
         {
-            _crawlerResults.AddRange(crawlerResults);
-            _reportString.Append($"Urls(html documents) found after crawling a website: {crawlerResults.Count}");
+            _crawlerResultsAllUniqLinks.AddRange(crawlerResults);
+            _crawlerResultsAllHtmlPages.AddRange(FilterOnlyHtmlAnd2xx3xx(_crawlerResultsAllUniqLinks));
             
-            ConsoleController.WriteLine.Note($"Total crawled pages: {crawlerResults.Count}\n");
+            _reportString
+                .Insert(0, $"Urls(html documents) found after crawling a website: {_crawlerResultsAllHtmlPages.Count}");
+
+            ConsoleController.WriteLine.Note(
+                $"Total crawled links: {crawlerResults.Count}; HTML-pages: {_crawlerResultsAllHtmlPages.Count}\n");
         }
 
         public void AddSiteMapExplorerResults(IList<ContentLoadResult> siteMapExploreResults)
@@ -32,8 +37,8 @@ namespace SiteEvaluator.Presentation
         
         public async Task ReportDifferences()
         {
-            var onlyInSiteMapResults = SubtractLists(_siteMapResults, _crawlerResults).ToList();
-            var onlyInCrawlerResults = SubtractLists(_crawlerResults, _siteMapResults).ToList();
+            var onlyInSiteMapResults = SubtractLists(_siteMapResults, _crawlerResultsAllHtmlPages).ToList();
+            var onlyInCrawlerResults = SubtractLists(_crawlerResultsAllHtmlPages, _siteMapResults).ToList();
 
             ReportExclusive(onlyInSiteMapResults, "Urls FOUNDED IN SITEMAP.XML but not founded after crawling a web site");
             ReportExclusive(onlyInCrawlerResults, "Urls FOUNDED BY CRAWLING THE WEBSITE but not in sitemap.xml");
@@ -41,7 +46,7 @@ namespace SiteEvaluator.Presentation
             ConsoleController.WriteLine.Success("\nList of pages sorted by loading time (ms):");
             
             var onlyInSiteMapResultsWithContent = await LoadPagesContentAsync(onlyInSiteMapResults);
-            var contentLoadResults = JoinSort(_crawlerResults, onlyInSiteMapResultsWithContent);
+            var contentLoadResults = JoinSort(_crawlerResultsAllHtmlPages, onlyInSiteMapResultsWithContent);
             
             foreach (var contentLoadResult in contentLoadResults)
             {
@@ -92,6 +97,14 @@ namespace SiteEvaluator.Presentation
             result.Sort();
 
             return result;
+        }
+        
+        private static IEnumerable<ContentLoadResult> FilterOnlyHtmlAnd2xx3xx(IEnumerable<ContentLoadResult> values)
+        {
+            return values
+                .Where(result => result.ContentType
+                    .ToLower()
+                    .Contains("text/html") && (int)result.HttpStatusCode >= 200 && (int)result.HttpStatusCode < 400);
         }
     }
 }

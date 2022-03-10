@@ -61,29 +61,42 @@ namespace SiteEvaluator.ContentLoader
             if (!loadRobotsResult.IsSuccess || loadRobotsResult.HttpStatusCode != HttpStatusCode.OK)
                 return loadRobotsResult;
 
-            var indexOfSitemap = loadRobotsResult.Content.IndexOf("Sitemap:", StringComparison.InvariantCulture);
-            if (indexOfSitemap == -1)
+            var siteMapUrl = GetSiteMapUrl(loadRobotsResult.Content);
+            if (string.IsNullOrEmpty(siteMapUrl))
             {
                 return new ContentLoadResult(hostUrl)
                 {
-                    HttpStatusCode = HttpStatusCode.NotFound
+                    IsSuccess = false,
+                    HttpStatusCode = HttpStatusCode.NotFound,
                 };
             }
-
-            var indexOfEndOfSitemapUrl = loadRobotsResult.Content.IndexOf('\n', indexOfSitemap);
-            
-            indexOfEndOfSitemapUrl = indexOfEndOfSitemapUrl == -1
-                ? loadRobotsResult.Content[indexOfSitemap..].Length
-                : indexOfEndOfSitemapUrl;
-
-            var sitemapWordLength = "Sitemap:".Length;
-            var siteMapUrl = loadRobotsResult.Content
-                .Substring(indexOfSitemap + sitemapWordLength, indexOfEndOfSitemapUrl - sitemapWordLength)
-                .Trim();
 
             var siteMapLoadResult = await LoadContentAsync(siteMapUrl);
 
             return siteMapLoadResult;
+        }
+
+        private string GetSiteMapUrl(string robotsTxtContent)
+        {
+            const string sitemapWord = "Sitemap: ";
+            
+            var indexOfSitemap = robotsTxtContent.IndexOf(sitemapWord, StringComparison.InvariantCulture);
+            if (indexOfSitemap == -1) 
+                return "";
+
+            var startIndexOfUrl = indexOfSitemap + sitemapWord.Length;
+
+            var lengthOfUrl = robotsTxtContent.Substring(startIndexOfUrl).IndexOf('\n');
+            
+            lengthOfUrl = lengthOfUrl == -1
+                ? robotsTxtContent.Substring(startIndexOfUrl).Length
+                : lengthOfUrl;
+
+            var siteMapUrl = robotsTxtContent
+                .Substring(startIndexOfUrl, lengthOfUrl)
+                .Trim();
+
+            return siteMapUrl;
         }
     }
 }

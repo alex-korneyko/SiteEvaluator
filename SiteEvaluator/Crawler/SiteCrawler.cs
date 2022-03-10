@@ -6,6 +6,7 @@ using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Tags;
 using SiteEvaluator.Presentation;
+using SiteEvaluator.SiteMapExploring;
 
 namespace SiteEvaluator.Crawler
 {
@@ -67,9 +68,6 @@ namespace SiteEvaluator.Crawler
 
                 if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow") continue;
 
-                if (_settings.LogToConsole) 
-                    ConsoleController.WriteLine.Comment($"Attempt to load : {aLinkTag.Href} ... ");
-
                 var pageLoadResult = await _httpContentLoader.LoadContentAsync(fullUrl);
 
                 _result.Add(pageLoadResult);
@@ -80,10 +78,35 @@ namespace SiteEvaluator.Crawler
                     continue;
                 }
 
-                if (_settings.LogToConsole) ConsoleController.WriteLine.Success($"\t{pageLoadResult}");
+                if (_settings.LogToConsole) PrintResultString(pageLoadResult);
+
 
                 await ScanLinksAsync(pageLoadResult.Content, hostUrl);
             }
+        }
+
+        private static void PrintResultString(ContentLoadResult contentLoadResult)
+        {
+            ConsoleController.Write.Info($"Page: {contentLoadResult.PageUrl}; Status: ");
+            var httpStatusCode = (int)contentLoadResult.HttpStatusCode;
+            switch (httpStatusCode)
+            {
+                case >= 200 and < 300:
+                    ConsoleController.Write.Success($"{contentLoadResult.HttpStatusCode}({httpStatusCode})");
+                    break;
+                case >= 300 and < 400:
+                    ConsoleController.Write.Warning($"{contentLoadResult.HttpStatusCode}({httpStatusCode})");
+                    break;
+                case >= 400:
+                    ConsoleController.Write.Error($"{contentLoadResult.HttpStatusCode}({httpStatusCode})");
+                    break;
+                default:
+                    ConsoleController.Write.Info($"{contentLoadResult.HttpStatusCode}({httpStatusCode})");
+                    break;
+            }
+            
+            ConsoleController.Write.Info($"; Content: '{contentLoadResult.ContentType}'");
+            ConsoleController.WriteLine.Info($"; Load time: {contentLoadResult.PageLoadTime}ms");
         }
 
         private string GetFullUrl(A aTag, string hostUrl)

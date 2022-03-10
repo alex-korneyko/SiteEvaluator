@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace SiteEvaluator.ContentLoader
@@ -18,6 +20,8 @@ namespace SiteEvaluator.ContentLoader
 
         public HttpStatusCode HttpStatusCode { get; set; }
 
+        public string ContentType { get; set; } = string.Empty;
+
         public long PageLoadTime { get; set; }
 
         public bool IsSuccess { get; set; } = true;
@@ -28,6 +32,14 @@ namespace SiteEvaluator.ContentLoader
         {
             HttpStatusCode = httpResponseMessage.StatusCode;
             Content = await httpResponseMessage.Content.ReadAsStringAsync();
+            var contentTypeHeaders = httpResponseMessage.Content.Headers
+                .FirstOrDefault(header => header.Key.ToLower() == "content-type").Value;
+
+            if (contentTypeHeaders != null)
+            {
+                var stringBuilder = new StringBuilder().AppendJoin("; ", contentTypeHeaders);
+                ContentType = stringBuilder.ToString();
+            }
         }
 
         public bool Equals(ContentLoadResult? other)
