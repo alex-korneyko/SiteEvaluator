@@ -19,8 +19,8 @@ namespace SiteEvaluator.SiteMapExploring
             _httpContentLoader = httpContentLoader;
         }
 
-        public SiteMapExplorer(IHttpContentLoader httpContentLoader, Action<SiteMapExplorerSettings> explorerSettings) : this(
-            httpContentLoader)
+        public SiteMapExplorer(IHttpContentLoader httpContentLoader, Action<SiteMapExplorerSettings> explorerSettings) 
+            : this(httpContentLoader)
         {
             explorerSettings.Invoke(_settings);
         }
@@ -53,7 +53,8 @@ namespace SiteEvaluator.SiteMapExploring
 
         private static void PrintToConsole(SiteMap siteMap)
         {
-            if (siteMap.UrlSet == null) return;
+            if (siteMap.UrlSet == null)
+                return;
 
             ConsoleController.WriteLine.Success("sitemap.xml exploring result: ");
             foreach (var url in siteMap.UrlSet)

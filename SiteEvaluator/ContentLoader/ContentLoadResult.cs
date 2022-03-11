@@ -44,16 +44,26 @@ namespace SiteEvaluator.ContentLoader
 
         public bool Equals(ContentLoadResult? other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (ReferenceEquals(null, other)) 
+                return false;
+            
+            if (ReferenceEquals(this, other)) 
+                return true;
+            
             return PageUrl == other.PageUrl;
         }
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (ReferenceEquals(null, obj)) 
+                return false;
+            
+            if (ReferenceEquals(this, obj)) 
+                return true;
+            
+            if (obj.GetType() != GetType()) 
+                return false;
+            
             return Equals((ContentLoadResult)obj);
         }
 
@@ -71,8 +81,12 @@ namespace SiteEvaluator.ContentLoader
 
         public int CompareTo(ContentLoadResult? other)
         {
-            if (ReferenceEquals(this, other)) return 0;
-            if (ReferenceEquals(null, other)) return 1;
+            if (ReferenceEquals(this, other))
+                return 0;
+            
+            if (ReferenceEquals(null, other))
+                return 1;
+            
             return PageLoadTime.CompareTo(other.PageLoadTime);
         }
     }

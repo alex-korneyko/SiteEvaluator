@@ -8,12 +8,6 @@ namespace SiteEvaluator.Tests
     public class HtmlSerializerTests
     {
         [Fact]
-        public void Serialize_ShouldThrowNotImplementedException()
-        {
-            Assert.Throws<NotImplementedException>(() => HtmlSerializer.Serialize(new Body()));
-        }
-
-        [Fact]
         public void GetAllTagFullStrings_RawHtmlString_TagStringsList()
         {
             var allTagFullStrings = HtmlSerializer.GetAllTagFullStrings<Body>(GetRawHtmlString());

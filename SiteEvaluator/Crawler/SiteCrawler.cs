@@ -20,8 +20,8 @@ namespace SiteEvaluator.Crawler
             _httpContentLoader = httpContentLoader;
         }
 
-        public SiteCrawler(IHttpContentLoader httpContentLoader, Action<CrawlerSettings> crawlerSettings) : this(
-            httpContentLoader)
+        public SiteCrawler(IHttpContentLoader httpContentLoader, Action<CrawlerSettings> crawlerSettings) 
+            : this(httpContentLoader)
         {
             crawlerSettings.Invoke(_settings);
         }
@@ -33,7 +33,10 @@ namespace SiteEvaluator.Crawler
             hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
 
             var pageLoadResult = await _httpContentLoader.LoadContentAsync(hostUrl);
-            if (_settings.LogToConsole) PrintResultString(pageLoadResult);
+            
+            if (_settings.LogToConsole) 
+                PrintResultString(pageLoadResult);
+            
             _result.Add(pageLoadResult);
 
             var pageBody = string.Empty;
@@ -47,7 +50,8 @@ namespace SiteEvaluator.Crawler
 
             ConsoleController.WriteLine.Success("Crawling finished!");
 
-            if (_settings.PrintResult) PrintResult(_result);
+            if (_settings.PrintResult) 
+                PrintResult(_result);
 
             return _result;
         }
@@ -60,13 +64,16 @@ namespace SiteEvaluator.Crawler
             {
                 var aLinkTag = HtmlSerializer.Deserialize<A>(tagFullString);
 
-                if (aLinkTag == null) continue;
+                if (aLinkTag == null)
+                    continue;
 
                 var fullUrl = GetFullUrl(aLinkTag, hostUrl);
 
-                if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new ContentLoadResult(fullUrl))) continue;
+                if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new ContentLoadResult(fullUrl)))
+                    continue;
 
-                if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow") continue;
+                if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow")
+                    continue;
 
                 var pageLoadResult = await _httpContentLoader.LoadContentAsync(fullUrl);
 
@@ -78,7 +85,8 @@ namespace SiteEvaluator.Crawler
                     continue;
                 }
 
-                if (_settings.LogToConsole) PrintResultString(pageLoadResult);
+                if (_settings.LogToConsole)
+                    PrintResultString(pageLoadResult);
 
                 await ScanLinksAsync(pageLoadResult.Content, hostUrl);
             }
@@ -121,8 +129,10 @@ namespace SiteEvaluator.Crawler
                 }
             }
 
-            if (aTag.Href == null || aTag.Href.StartsWith("http") || !aTag.Href.StartsWith('/') ||
-                aTag.Href is "#" or "\\")
+            if (aTag.Href == null 
+                || aTag.Href.StartsWith("http") 
+                || !aTag.Href.StartsWith('/')
+                || aTag.Href is "#" or "\\")
             {
                 return "";
             }

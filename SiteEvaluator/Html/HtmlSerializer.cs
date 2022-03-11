@@ -55,11 +55,6 @@ namespace SiteEvaluator.Html
             return allTagStrings.Count > 0 ? allTagStrings[0] : "";
         }
 
-        public static string Serialize(HtmlTag htmlTag)
-        {
-            throw new NotImplementedException();
-        }
-
         public static T? Deserialize<T>(string tagFullString) where T : HtmlTag, new()
         {
             var tag = new T();

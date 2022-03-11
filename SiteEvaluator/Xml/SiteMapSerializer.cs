@@ -6,14 +6,9 @@ namespace SiteEvaluator.Xml
 {
     public static class SiteMapSerializer
     {
-        public static string Serialize()
-        {
-            throw new NotImplementedException();
-        }
-
         public static SiteMap Deserialize(string xmlString)
         {
-            var namespaceForUrlset = GetNamespaceForUrlset(xmlString);
+            var namespaceForUrlset = GetNamespaceForUrlSet(xmlString);
             
             var xmlSerializer = new XmlSerializer(typeof(SiteMap), namespaceForUrlset);
 
@@ -40,21 +35,21 @@ namespace SiteEvaluator.Xml
             return memoryStream;
         }
 
-        private static string GetNamespaceForUrlset(string xmlString)
+        private static string GetNamespaceForUrlSet(string xmlString)
         {
             if (string.IsNullOrEmpty(xmlString)) return "";
 
-            const string urlsetXmlns = "urlset xmlns=\"";
+            const string urlSetXmlns = "urlset xmlns=\"";
             
-            var indexOfStartUrlsetXmlnsName = xmlString
-                .IndexOf(urlsetXmlns, StringComparison.InvariantCulture) + urlsetXmlns.Length;
+            var indexOfStartUrlSetXmlnsName = xmlString
+                .IndexOf(urlSetXmlns, StringComparison.InvariantCulture) + urlSetXmlns.Length;
 
-            var lengthUrlsetXmlnsName = xmlString
-                .IndexOf('\"', indexOfStartUrlsetXmlnsName) - indexOfStartUrlsetXmlnsName;
+            var lengthUrlSetXmlnsName = xmlString
+                .IndexOf('\"', indexOfStartUrlSetXmlnsName) - indexOfStartUrlSetXmlnsName;
 
-            if (indexOfStartUrlsetXmlnsName > -1 && lengthUrlsetXmlnsName > 0)
+            if (indexOfStartUrlSetXmlnsName > -1 && lengthUrlSetXmlnsName > 0)
             {
-                return xmlString.Substring(indexOfStartUrlsetXmlnsName, lengthUrlsetXmlnsName);
+                return xmlString.Substring(indexOfStartUrlSetXmlnsName, lengthUrlSetXmlnsName);
             }
 
             return "";
