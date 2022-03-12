@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SiteEvaluator.ContentLoader;
@@ -13,6 +12,7 @@ namespace SiteEvaluator.SiteMapExploring
     {
         private readonly IHttpContentLoader _httpContentLoader;
         private readonly SiteMapExplorerSettings _settings = new();
+        private readonly ExploreSettings _exploreSettings = new();
 
         public SiteMapExplorer(IHttpContentLoader httpContentLoader)
         {
@@ -25,8 +25,10 @@ namespace SiteEvaluator.SiteMapExploring
             explorerSettings.Invoke(_settings);
         }
 
-        public async Task<IList<ContentLoadResult>> ExploreAsync(string hostUrl, bool loadPagesContent)
+        public async Task<IList<ContentLoadResult>> ExploreAsync(string hostUrl, Action<ExploreSettings>? exploreSettings = null)
         {
+            exploreSettings?.Invoke(_exploreSettings);
+
             ConsoleController.WriteLine.Warning("Start sitemap.xml exploring...");
 
             var loadSiteMapResult = await _httpContentLoader.LoadSiteMapAsync(hostUrl);
@@ -42,7 +44,7 @@ namespace SiteEvaluator.SiteMapExploring
                 if (_settings.PrintResult) 
                     PrintToConsole(siteMap);
 
-                return await ToContentLoadResultsAsync(siteMap, loadPagesContent);
+                return await ToContentLoadResultsAsync(siteMap, _exploreSettings);
             }
             catch (Exception e)
             {
@@ -64,39 +66,28 @@ namespace SiteEvaluator.SiteMapExploring
             }
         }
 
-        private async Task<IList<ContentLoadResult>> ToContentLoadResultsAsync(SiteMap siteMap, bool loadPagesContent)
+        private async Task<IList<ContentLoadResult>> ToContentLoadResultsAsync(SiteMap siteMap, ExploreSettings exploreSettings)
         {
-            return loadPagesContent 
-                ? await GetFullContentLoadResultsAsync(siteMap)
-                : GetEmptyContentLoadResults(siteMap);
-        }
+            var results = new List<ContentLoadResult>();
 
-        private IList<ContentLoadResult> GetEmptyContentLoadResults(SiteMap siteMap)
-        {
-            if (siteMap.UrlSet != null)
+            if (siteMap.UrlSet == null) 
+                return results;
+            
+            foreach (var url in siteMap.UrlSet)
             {
-                return siteMap.UrlSet
-                    .Where(url => url.Loc != null)
-                    .Select(url => new ContentLoadResult(url.Loc!))
-                    .ToList();
-            }
+                if (url.Loc == null)
+                    continue;
 
-            return new List<ContentLoadResult>();
-        }
-
-        private async Task<List<ContentLoadResult>> GetFullContentLoadResultsAsync(SiteMap siteMap)
-        {
-            var fullContentLoadResults = new List<ContentLoadResult>();
-
-            if (siteMap.UrlSet != null)
-            {
-                foreach (var url in siteMap.UrlSet)
+                if (exploreSettings.LoadContent && !exploreSettings.UrlsForExcludeLoadContent.Contains(url.Loc))
                 {
-                    fullContentLoadResults.Add(await _httpContentLoader.LoadContentAsync(url.Loc!));
+                    results.Add(await _httpContentLoader.LoadContentAsync(url.Loc));
+                    continue;
                 }
+                    
+                results.Add(new ContentLoadResult(url.Loc));
             }
 
-            return fullContentLoadResults;
+            return results;
         }
     }
 }

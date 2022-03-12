@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Moq;
@@ -24,7 +26,7 @@ namespace SiteEvaluator.Tests
 
             var siteMapExplorer = new SiteMapExplorer(mockHttpContentLoader.Object);
 
-            var siteMapExploreResult = await siteMapExplorer.ExploreAsync(hostUrl, false);
+            var siteMapExploreResult = await siteMapExplorer.ExploreAsync(hostUrl);
             
             Assert.NotNull(siteMapExploreResult);
             Assert.Equal(urlSetIsNull, siteMapExploreResult.Count == 0);

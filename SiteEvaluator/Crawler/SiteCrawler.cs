@@ -28,7 +28,7 @@ namespace SiteEvaluator.Crawler
 
         public async Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl)
         {
-            ConsoleController.WriteLine.Info("Start crawling...");
+            ConsoleController.WriteLine.Warning("Start crawling...");
 
             hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
 
