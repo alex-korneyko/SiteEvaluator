@@ -5,11 +5,11 @@ using SiteEvaluator.Html.Tags;
 
 namespace SiteEvaluator.Html
 {
-    public static class HtmlSerializer
+    public class HtmlParseService : IHtmlParseService
     {
-        public static List<string> GetAllTagFullStrings<T>(string rawHtml) where T : HtmlTag, new()
+        public List<string> GetNodesAsStringsList<T>(string rawHtml) where T : HtmlNode, new()
         {
-            var listEachTagFullStrings = new List<string>();
+            var listEachNodeFullStrings = new List<string>();
 
             var sbRawHtml = new StringBuilder(rawHtml);
 
@@ -18,25 +18,25 @@ namespace SiteEvaluator.Html
 
             do
             {
-                var startTagIndex = sbRawHtml.ToString().IndexOf(tag.OpenTag, StringComparison.InvariantCulture);
-                if (startTagIndex > -1)
+                var startNodeTagIndex = sbRawHtml.ToString().IndexOf(tag.OpenNodeTag, StringComparison.InvariantCulture);
+                if (startNodeTagIndex > -1)
                 {
                     found = true;
-                    var relativeCloseTagIndex = sbRawHtml
+                    var relativeCloseNodeTagIndex = sbRawHtml
                         .ToString()
-                        .Substring(startTagIndex)
-                        .IndexOf(tag.CloseTag, StringComparison.InvariantCulture);
-                    if (relativeCloseTagIndex > -1)
+                        .Substring(startNodeTagIndex)
+                        .IndexOf(tag.CloseNodeTag, StringComparison.InvariantCulture);
+                    if (relativeCloseNodeTagIndex > -1)
                     {
-                        var tagFullStringLength = relativeCloseTagIndex + tag.CloseTag.Length;
-                        var tagString = sbRawHtml.ToString().Substring(startTagIndex, tagFullStringLength);
-                        listEachTagFullStrings.Add(tagString);
-                        sbRawHtml.Remove(0, startTagIndex + tagFullStringLength);
+                        var nodeFullStringLength = relativeCloseNodeTagIndex + tag.CloseNodeTag.Length;
+                        var nodeString = sbRawHtml.ToString().Substring(startNodeTagIndex, nodeFullStringLength);
+                        listEachNodeFullStrings.Add(nodeString);
+                        sbRawHtml.Remove(0, startNodeTagIndex + nodeFullStringLength);
                     }
                     else
                     {
-                        listEachTagFullStrings.Add(tag.OpenTag);
-                        sbRawHtml.Remove(0, startTagIndex + tag.OpenTag.Length);
+                        listEachNodeFullStrings.Add(tag.OpenNodeTag);
+                        sbRawHtml.Remove(0, startNodeTagIndex + tag.OpenNodeTag.Length);
                     }
                 }
                 else
@@ -45,32 +45,32 @@ namespace SiteEvaluator.Html
                 }
             } while (found);
 
-            return listEachTagFullStrings;
+            return listEachNodeFullStrings;
         }
 
-        public static string GetBody(string rawHtml)
+        public string ExtractBodyNode(string rawHtml)
         {
-            var allTagStrings = GetAllTagFullStrings<Body>(rawHtml);
+            var allTagStrings = GetNodesAsStringsList<Body>(rawHtml);
 
             return allTagStrings.Count > 0 ? allTagStrings[0] : "";
         }
 
-        public static T? Deserialize<T>(string tagFullString) where T : HtmlTag, new()
+        public T? DeserializeToNode<T>(string tagFullString) where T : HtmlNode, new()
         {
             var tag = new T();
 
-            if (!tagFullString.StartsWith(tag.OpenTag) || !tagFullString.EndsWith(tag.CloseTag))
+            if (!tagFullString.StartsWith(tag.OpenNodeTag) || !tagFullString.EndsWith(tag.CloseNodeTag))
             {
                 return null;
             }
 
             foreach (var propertyInfo in typeof(T).GetProperties())
             {
-                var customAttributes = propertyInfo.GetCustomAttributes(typeof(HtmlTagAttributeAttribute), false);
+                var customAttributes = propertyInfo.GetCustomAttributes(typeof(HtmlNodeAttributeAttribute), false);
 
                 foreach (var customAttribute in customAttributes)
                 {
-                    if (customAttribute is not HtmlTagAttributeAttribute htmlTagAttribute) continue;
+                    if (customAttribute is not HtmlNodeAttributeAttribute htmlTagAttribute) continue;
 
                     var attributeName = htmlTagAttribute.AttributeName == ""
                         ? propertyInfo.Name.ToLower()

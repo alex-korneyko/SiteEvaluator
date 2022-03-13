@@ -2,7 +2,7 @@
 
 namespace SiteEvaluator.ContentLoader
 {
-    public interface IHttpContentLoader
+    public interface IHttpContentLoaderService
     {
         Task<ContentLoadResult> LoadContentAsync(string pageUrl);
         Task<ContentLoadResult> LoadRobotsAsync(string hostUrl);

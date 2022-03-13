@@ -10,17 +10,17 @@ namespace SiteEvaluator.SiteMapExploring
 {
     public class SiteMapExplorer : ISiteMapExplorer
     {
-        private readonly IHttpContentLoader _httpContentLoader;
+        private readonly IHttpContentLoaderService _httpContentLoaderService;
         private readonly SiteMapExplorerSettings _settings = new();
         private readonly ExploreSettings _exploreSettings = new();
 
-        public SiteMapExplorer(IHttpContentLoader httpContentLoader)
+        public SiteMapExplorer(IHttpContentLoaderService httpContentLoaderService)
         {
-            _httpContentLoader = httpContentLoader;
+            _httpContentLoaderService = httpContentLoaderService;
         }
 
-        public SiteMapExplorer(IHttpContentLoader httpContentLoader, Action<SiteMapExplorerSettings> explorerSettings) 
-            : this(httpContentLoader)
+        public SiteMapExplorer(IHttpContentLoaderService httpContentLoaderService, Action<SiteMapExplorerSettings> explorerSettings) 
+            : this(httpContentLoaderService)
         {
             explorerSettings.Invoke(_settings);
         }
@@ -31,7 +31,7 @@ namespace SiteEvaluator.SiteMapExploring
 
             ConsoleController.WriteLine.Warning("Start sitemap.xml exploring...");
 
-            var loadSiteMapResult = await _httpContentLoader.LoadSiteMapAsync(hostUrl);
+            var loadSiteMapResult = await _httpContentLoaderService.LoadSiteMapAsync(hostUrl);
 
             if (!loadSiteMapResult.IsSuccess || loadSiteMapResult.HttpStatusCode != HttpStatusCode.OK)
                 return new List<ContentLoadResult>();
@@ -80,7 +80,7 @@ namespace SiteEvaluator.SiteMapExploring
 
                 if (exploreSettings.LoadContent && !exploreSettings.UrlsForExcludeLoadContent.Contains(url.Loc))
                 {
-                    results.Add(await _httpContentLoader.LoadContentAsync(url.Loc));
+                    results.Add(await _httpContentLoaderService.LoadContentAsync(url.Loc));
                     continue;
                 }
                     

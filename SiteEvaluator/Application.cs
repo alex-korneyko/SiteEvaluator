@@ -23,7 +23,12 @@ namespace SiteEvaluator
 
             var hostUrl = GetHostUrl(args);
 
-            var siteCrawlerResults = await _siteCrawler.CrawlAsync(hostUrl);
+            var siteCrawlerResults = await _siteCrawler.CrawlAsync(hostUrl, settings =>
+            {
+                settings.IncludeNofollowLinks = false;
+                settings.LogToConsole = true;
+                settings.PrintResult = false;
+            });
             report.AddCrawlerResults(siteCrawlerResults);
 
             var siteMapExplorerResults = await _siteMapExplorer.ExploreAsync(hostUrl, settings =>

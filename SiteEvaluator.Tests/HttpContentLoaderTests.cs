@@ -27,7 +27,7 @@ namespace SiteEvaluator.Tests
                 .Setup(targetUrl)
                 .Returns(content);
             
-            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
+            var httpContentLoader = new HttpContentLoaderService(new HttpClient(mockHttpMessageHandler));
 
             var contentLoadResult = await httpContentLoader.LoadContentAsync(requestUrl);
             
@@ -44,7 +44,7 @@ namespace SiteEvaluator.Tests
             var mockHttpMessageHandler = new MockHttpMessageHandler();
             mockHttpMessageHandler.Setup(url);
 
-            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
+            var httpContentLoader = new HttpContentLoaderService(new HttpClient(mockHttpMessageHandler));
 
             var contentLoadResult = await httpContentLoader.LoadContentAsync(url);
 
@@ -60,7 +60,7 @@ namespace SiteEvaluator.Tests
                 .Setup("https://localhost/robots.txt")
                 .Returns(GetRobotsTxtWithSitemapUrlInLastLine());
             
-            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
+            var httpContentLoader = new HttpContentLoaderService(new HttpClient(mockHttpMessageHandler));
             var contentLoadResult = await httpContentLoader.LoadRobotsAsync("https://localhost");
             
             Assert.True(contentLoadResult.IsSuccess);
@@ -84,7 +84,7 @@ namespace SiteEvaluator.Tests
                 .Setup("https://localhost/serviceInformation/sitemap.xml")
                 .Returns(sitemapContent, "text/html", actualStatusCode);
 
-            var httpContentLoader = new HttpContentLoader(new HttpClient(mockHttpMessageHandler));
+            var httpContentLoader = new HttpContentLoaderService(new HttpClient(mockHttpMessageHandler));
             var contentLoadResult = await httpContentLoader.LoadSiteMapAsync("https://localhost");
             
             Assert.True(contentLoadResult.IsSuccess);

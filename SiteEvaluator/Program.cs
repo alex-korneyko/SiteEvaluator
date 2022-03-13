@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Crawler;
+using SiteEvaluator.Html;
 using SiteEvaluator.SiteMapExploring;
 
 namespace SiteEvaluator
@@ -10,14 +11,10 @@ namespace SiteEvaluator
     {
         public static async Task Main(string[] args)
         {
-            var httpContentLoader = new HttpContentLoader(new HttpClient());
-            
-            ISiteCrawler siteCrawler = new SiteCrawler(httpContentLoader, settings =>
-            {
-                settings.IncludeNofollowLinks = false;
-                settings.LogToConsole = true;
-                settings.PrintResult = false;
-            });
+            var httpContentLoader = new HttpContentLoaderService(new HttpClient());
+            var htmlParseService = new HtmlParseService();
+
+            ISiteCrawler siteCrawler = new SiteCrawler(httpContentLoader, htmlParseService);
 
             ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(httpContentLoader, settings =>
             {

@@ -3,15 +3,15 @@
 namespace SiteEvaluator.Html.Tags
 {
     [AttributeUsage(AttributeTargets.Property)]
-    public class HtmlTagAttributeAttribute : Attribute
+    public class HtmlNodeAttributeAttribute : Attribute
     {
         public string AttributeName { get; } = string.Empty;
 
-        public HtmlTagAttributeAttribute()
+        public HtmlNodeAttributeAttribute()
         {
         }
 
-        public HtmlTagAttributeAttribute(string attributeName)
+        public HtmlNodeAttributeAttribute(string attributeName)
         {
             AttributeName = attributeName;
         }

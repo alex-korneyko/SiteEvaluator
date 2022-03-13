@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace SiteEvaluator.ContentLoader
 {
-    public class HttpContentLoader : IHttpContentLoader
+    public class HttpContentLoaderService : IHttpContentLoaderService
     {
         private readonly HttpClient _httpClient;
 
-        public HttpContentLoader(HttpClient httpClient)
+        public HttpContentLoaderService(HttpClient httpClient)
         {
             _httpClient = httpClient;
         }

@@ -18,7 +18,7 @@ namespace SiteEvaluator.Tests
         {
             const string hostUrl = "https://localhost";
             
-            var mockHttpContentLoader = new Mock<IHttpContentLoader>();
+            var mockHttpContentLoader = new Mock<IHttpContentLoaderService>();
             mockHttpContentLoader
                 .Setup(loader => loader.LoadSiteMapAsync(hostUrl))
                 .Returns(Task.FromResult(GetContentLoadResult(hostUrl, sitemapXmlString)));

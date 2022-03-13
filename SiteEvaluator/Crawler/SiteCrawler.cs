@@ -11,28 +11,26 @@ namespace SiteEvaluator.Crawler
 {
     public class SiteCrawler : ISiteCrawler
     {
-        private readonly IHttpContentLoader _httpContentLoader;
+        private readonly IHttpContentLoaderService _httpContentLoaderService;
+        private readonly IHtmlParseService _htmlParseService;
         private readonly List<ContentLoadResult> _result = new();
         private readonly CrawlerSettings _settings = new();
 
-        public SiteCrawler(IHttpContentLoader httpContentLoader)
+        public SiteCrawler(IHttpContentLoaderService httpContentLoaderService, IHtmlParseService htmlParseService)
         {
-            _httpContentLoader = httpContentLoader;
+            _httpContentLoaderService = httpContentLoaderService;
+            _htmlParseService = htmlParseService;
         }
 
-        public SiteCrawler(IHttpContentLoader httpContentLoader, Action<CrawlerSettings> crawlerSettings) 
-            : this(httpContentLoader)
+        public async Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null)
         {
-            crawlerSettings.Invoke(_settings);
-        }
-
-        public async Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl)
-        {
+            crawlerSettings?.Invoke(_settings);
+            
             ConsoleController.WriteLine.Warning("Start crawling...");
 
             hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
 
-            var pageLoadResult = await _httpContentLoader.LoadContentAsync(hostUrl);
+            ContentLoadResult pageLoadResult = await _httpContentLoaderService.LoadContentAsync(hostUrl);
             
             if (_settings.LogToConsole) 
                 PrintResultString(pageLoadResult);
@@ -43,7 +41,7 @@ namespace SiteEvaluator.Crawler
 
             if (pageLoadResult.HttpStatusCode == HttpStatusCode.OK)
             {
-                pageBody = HtmlSerializer.GetBody(pageLoadResult.Content);
+                pageBody = _htmlParseService.ExtractBodyNode(pageLoadResult.Content);
             }
 
             await ScanLinksAsync(pageBody, hostUrl);
@@ -58,11 +56,11 @@ namespace SiteEvaluator.Crawler
 
         private async Task ScanLinksAsync(string pageBody, string hostUrl)
         {
-            var allTagFullStrings = HtmlSerializer.GetAllTagFullStrings<A>(pageBody);
+            var allTagFullStrings = _htmlParseService.GetNodesAsStringsList<A>(pageBody);
 
             foreach (var tagFullString in allTagFullStrings)
             {
-                var aLinkTag = HtmlSerializer.Deserialize<A>(tagFullString);
+                var aLinkTag = _htmlParseService.DeserializeToNode<A>(tagFullString);
 
                 if (aLinkTag == null)
                     continue;
@@ -75,7 +73,7 @@ namespace SiteEvaluator.Crawler
                 if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow")
                     continue;
 
-                var pageLoadResult = await _httpContentLoader.LoadContentAsync(fullUrl);
+                var pageLoadResult = await _httpContentLoaderService.LoadContentAsync(fullUrl);
 
                 _result.Add(pageLoadResult);
 

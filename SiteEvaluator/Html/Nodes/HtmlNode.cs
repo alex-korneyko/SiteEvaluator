@@ -1,20 +1,20 @@
 ﻿namespace SiteEvaluator.Html.Tags
 {
-    public abstract class HtmlTag
+    public abstract class HtmlNode
     {
         protected abstract string Name { get; }
 
-        public string OpenTag => "<" + Name;
+        public string OpenNodeTag => "<" + Name;
 
-        public string CloseTag => "</" + Name + ">";
+        public string CloseNodeTag => "</" + Name + ">";
 
-        [HtmlTagAttribute] 
+        [HtmlNodeAttribute] 
         public string? Id { get; set; }
 
-        [HtmlTagAttribute]
+        [HtmlNodeAttribute]
         public string? Class { get; set; }
 
-        [HtmlTagAttribute]
+        [HtmlNodeAttribute]
         public string? Style { get; set; }
     }
 }

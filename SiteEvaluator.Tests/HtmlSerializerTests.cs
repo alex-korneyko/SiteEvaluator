@@ -1,4 +1,3 @@
-using System;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Tags;
 using Xunit;
@@ -10,7 +9,9 @@ namespace SiteEvaluator.Tests
         [Fact]
         public void GetAllTagFullStrings_RawHtmlString_TagStringsList()
         {
-            var allTagFullStrings = HtmlSerializer.GetAllTagFullStrings<Body>(GetRawHtmlString());
+            var htmlParseService = new HtmlParseService();
+
+            var allTagFullStrings = htmlParseService.GetNodesAsStringsList<Body>(GetRawHtmlString());
 
             Assert.NotEmpty(allTagFullStrings);
             Assert.Collection(allTagFullStrings, tagString =>
@@ -24,7 +25,9 @@ namespace SiteEvaluator.Tests
         [Fact]
         public void GetBody_RawHtmlString_ShouldReturnBodyString()
         {
-            var body = HtmlSerializer.GetBody(GetRawHtmlString());
+            var htmlParseService = new HtmlParseService();
+            
+            var body = htmlParseService.ExtractBodyNode(GetRawHtmlString());
 
             Assert.Equal(GetBodyString(), body);
         }
@@ -32,23 +35,27 @@ namespace SiteEvaluator.Tests
         [Fact]
         public void Deserialize_BodyString_ShouldReturnBodyHtmlTag()
         {
-            var body = HtmlSerializer.Deserialize<Body>(GetBodyString());
+            var htmlParseService = new HtmlParseService();
+            
+            var body = htmlParseService.DeserializeToNode<Body>(GetBodyString());
 
             Assert.NotNull(body);
             Assert.IsType<Body>(body);
-            Assert.Equal("<body", body.OpenTag);
-            Assert.Equal("</body>", body.CloseTag);
+            Assert.Equal("<body", body.OpenNodeTag);
+            Assert.Equal("</body>", body.CloseNodeTag);
         }
 
         [Fact]
         public void Deserialize_AString_ShouldReturnAHtmlTag()
         {
-            var a = HtmlSerializer.Deserialize<A>(GetAString());
+            var htmlParseService = new HtmlParseService();
+            
+            var a = htmlParseService.DeserializeToNode<A>(GetAString());
 
             Assert.NotNull(a);
             Assert.IsType<A>(a);
-            Assert.Equal("<a", a.OpenTag);
-            Assert.Equal("</a>", a.CloseTag);
+            Assert.Equal("<a", a.OpenNodeTag);
+            Assert.Equal("</a>", a.CloseNodeTag);
             Assert.NotNull(a.Href);
             Assert.Equal("https://i.ua", a.Href);
             Assert.NotNull(a.Rel);

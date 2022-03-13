@@ -69,7 +69,7 @@ namespace SiteEvaluator.Presentation
         {
             var exclusivelyForSiteMap = new List<ContentLoadResult>();
             
-            var httpContentLoader = new HttpContentLoader(new HttpClient());
+            var httpContentLoader = new HttpContentLoaderService(new HttpClient());
             foreach (var contentLoadResult in emptyResults)
             {
                 exclusivelyForSiteMap.Add(await httpContentLoader.LoadContentAsync(contentLoadResult.PageUrl));
