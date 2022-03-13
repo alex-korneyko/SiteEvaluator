@@ -7,6 +7,6 @@ namespace SiteEvaluator.Html
     {
         List<string> GetNodesAsStringsList<T>(string rawHtml) where T : HtmlNode, new();
         string ExtractBodyNode(string rawHtml);
-        T? DeserializeToNode<T>(string tagFullString) where T : HtmlNode, new();
+        T? DeserializeToNode<T>(string nodeFullString) where T : HtmlNode, new();
     }
 }
