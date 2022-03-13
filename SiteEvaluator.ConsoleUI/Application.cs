@@ -6,7 +6,7 @@ using SiteEvaluator.Crawler;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExploring;
 
-namespace SiteEvaluator
+namespace SiteEvaluator.ConsoleUI
 {
     public class Application
     {
