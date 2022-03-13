@@ -11,18 +11,15 @@ namespace SiteEvaluator.SiteMapExploring
     public class SiteMapExplorer : ISiteMapExplorer
     {
         private readonly IHttpContentLoaderService _httpContentLoaderService;
-        private readonly SiteMapExplorerSettings _settings = new();
+        private readonly ISiteMapParseService _siteMapParseService;
         private readonly ExploreSettings _exploreSettings = new();
 
-        public SiteMapExplorer(IHttpContentLoaderService httpContentLoaderService)
+        public SiteMapExplorer(
+            IHttpContentLoaderService httpContentLoaderService,
+            ISiteMapParseService siteMapParseService)
         {
             _httpContentLoaderService = httpContentLoaderService;
-        }
-
-        public SiteMapExplorer(IHttpContentLoaderService httpContentLoaderService, Action<SiteMapExplorerSettings> explorerSettings) 
-            : this(httpContentLoaderService)
-        {
-            explorerSettings.Invoke(_settings);
+            _siteMapParseService = siteMapParseService;
         }
 
         public async Task<IList<ContentLoadResult>> ExploreAsync(string hostUrl, Action<ExploreSettings>? exploreSettings = null)
@@ -38,10 +35,10 @@ namespace SiteEvaluator.SiteMapExploring
             
             try
             {
-                var siteMap = SiteMapSerializer.Deserialize(loadSiteMapResult.Content);
+                var siteMap = _siteMapParseService.DeserializeToSiteMap(loadSiteMapResult.Content);
                 ConsoleController.WriteLine.Success("sitemap.xml explored!");
                 
-                if (_settings.PrintResult) 
+                if (_exploreSettings.PrintResult) 
                     PrintToConsole(siteMap);
 
                 return await ToContentLoadResultsAsync(siteMap, _exploreSettings);

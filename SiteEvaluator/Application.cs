@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Crawler;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExploring;
@@ -23,22 +25,26 @@ namespace SiteEvaluator
 
             var hostUrl = GetHostUrl(args);
 
-            var siteCrawlerResults = await _siteCrawler.CrawlAsync(hostUrl, settings =>
-            {
-                settings.IncludeNofollowLinks = false;
-                settings.LogToConsole = true;
-                settings.PrintResult = false;
-            });
+            IList<ContentLoadResult> siteCrawlerResults = await _siteCrawler
+                .CrawlAsync(hostUrl, settings =>
+                {
+                    settings.IncludeNofollowLinks = false;
+                    settings.LogToConsole = true;
+                    settings.PrintResult = false;
+                });
+
             report.AddCrawlerResults(siteCrawlerResults);
 
-            var siteMapExplorerResults = await _siteMapExplorer.ExploreAsync(hostUrl, settings =>
+            IList<ContentLoadResult> siteMapExplorerResults = await _siteMapExplorer
+                .ExploreAsync(hostUrl, settings =>
                 {
+                    settings.PrintResult = false;
                     settings.LoadContent = true;
                     settings.UrlsForExcludeLoadContent
                         .AddRange(siteCrawlerResults
                             .Select(result => result.PageUrl));
                 });
-            
+
             report.AddSiteMapExplorerResults(siteMapExplorerResults);
 
             await report.ReportDifferences();
@@ -54,7 +60,7 @@ namespace SiteEvaluator
 
             if (hostUrl.Equals(""))
                 hostUrl = "https://www.ukad-group.com/";
-            
+
             return hostUrl;
         }
     }

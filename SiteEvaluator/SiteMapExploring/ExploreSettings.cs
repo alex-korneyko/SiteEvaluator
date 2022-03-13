@@ -6,5 +6,6 @@ namespace SiteEvaluator.SiteMapExploring
     {
         public bool LoadContent { get; set; } = false;
         public List<string> UrlsForExcludeLoadContent { get; set; } = new();
+        public bool PrintResult { get; set; }
     }
 }

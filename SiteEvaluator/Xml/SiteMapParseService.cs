@@ -4,9 +4,9 @@ using System.Xml.Serialization;
 
 namespace SiteEvaluator.Xml
 {
-    public static class SiteMapSerializer
+    public class SiteMapParseService : ISiteMapParseService
     {
-        public static SiteMap Deserialize(string xmlString)
+        public SiteMap DeserializeToSiteMap(string xmlString)
         {
             var namespaceForUrlset = GetNamespaceForUrlSet(xmlString);
             

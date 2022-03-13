@@ -9,7 +9,9 @@ namespace SiteEvaluator.Tests
         [ClassData(typeof(SitemapData))]
         public void Deserialize_XmlString_ShouldReturnSiteMapObject(string sitemapXmlString, bool urlSetIsNull)
         {
-            var siteMap = SiteMapSerializer.Deserialize(sitemapXmlString);
+            var siteMapParseService = new SiteMapParseService();
+
+            var siteMap = siteMapParseService.DeserializeToSiteMap(sitemapXmlString);
             
             Assert.NotNull(siteMap);
             Assert.IsType<SiteMap>(siteMap);

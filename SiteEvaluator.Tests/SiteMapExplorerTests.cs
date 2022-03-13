@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Moq;
 using SiteEvaluator.ContentLoader;
 using SiteEvaluator.SiteMapExploring;
+using SiteEvaluator.Xml;
 using Xunit;
 
 namespace SiteEvaluator.Tests
@@ -22,9 +23,10 @@ namespace SiteEvaluator.Tests
             mockHttpContentLoader
                 .Setup(loader => loader.LoadSiteMapAsync(hostUrl))
                 .Returns(Task.FromResult(GetContentLoadResult(hostUrl, sitemapXmlString)));
-            
 
-            var siteMapExplorer = new SiteMapExplorer(mockHttpContentLoader.Object);
+            var siteMapParseService = new SiteMapParseService();
+
+            var siteMapExplorer = new SiteMapExplorer(mockHttpContentLoader.Object, siteMapParseService);
 
             var siteMapExploreResult = await siteMapExplorer.ExploreAsync(hostUrl);
             
