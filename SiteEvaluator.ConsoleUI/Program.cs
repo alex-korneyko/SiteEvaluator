@@ -18,7 +18,7 @@ namespace SiteEvaluator.ConsoleUI
             IHttpContentLoaderService httpContentLoaderService = new HttpContentLoaderService(new HttpClient());
             IHtmlParseService htmlParseService = new HtmlParseService();
             ISiteMapParseService siteMapParseService = new SiteMapParseService();
-            IDao dao = new FileDao();
+            IDao<ContentLoadResult> dao = new FileDao<ContentLoadResult>();
 
             //Services. Second layer
             ISiteCrawler siteCrawler = new SiteCrawler(httpContentLoaderService, htmlParseService);
