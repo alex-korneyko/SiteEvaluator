@@ -2,7 +2,9 @@
 using System.Threading.Tasks;
 using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Crawler;
+using SiteEvaluator.Data;
 using SiteEvaluator.Html;
+using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExploring;
 using SiteEvaluator.Xml;
 
@@ -12,16 +14,18 @@ namespace SiteEvaluator.ConsoleUI
     {
         static async Task Main(string[] args)
         {
-            //First level of services layer
-            IHttpContentLoaderService httpContentLoader = new HttpContentLoaderService(new HttpClient());
+            //Services. First layer
+            IHttpContentLoaderService httpContentLoaderService = new HttpContentLoaderService(new HttpClient());
             IHtmlParseService htmlParseService = new HtmlParseService();
             ISiteMapParseService siteMapParseService = new SiteMapParseService();
+            IDao dao = new FileDao();
 
-            //Second level of services layer
-            ISiteCrawler siteCrawler = new SiteCrawler(httpContentLoader, htmlParseService);
-            ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(httpContentLoader, siteMapParseService);
+            //Services. Second layer
+            ISiteCrawler siteCrawler = new SiteCrawler(httpContentLoaderService, htmlParseService);
+            ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(httpContentLoaderService, siteMapParseService);
+            IReportService reportService = new ReportService(dao);
 
-            var application = new Application(siteMapExplorer, siteCrawler);
+            var application = new Application(siteMapExplorer, siteCrawler, reportService);
             
             await application.StartAsync(args);
         }

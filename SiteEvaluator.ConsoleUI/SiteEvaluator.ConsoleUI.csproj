@@ -6,6 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\SiteEvaluator.Data\SiteEvaluator.Data.csproj" />
       <ProjectReference Include="..\SiteEvaluator\SiteEvaluator.csproj" />
     </ItemGroup>
 
