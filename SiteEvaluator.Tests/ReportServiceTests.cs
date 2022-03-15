@@ -1,7 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Moq;
 using SiteEvaluator.ContentLoader;
+using SiteEvaluator.Data;
 using SiteEvaluator.Presentation;
 using Xunit;
 
@@ -11,27 +14,76 @@ namespace SiteEvaluator.Tests
     {
         [Theory]
         [ClassData(typeof(ReportData))]
-        public void AllMethodsInOneTest(
-            IEnumerable<ContentLoadResult> crawlerResults,
-            IEnumerable<ContentLoadResult> siteMapResults,
-            IEnumerable<ContentLoadResult> expectedOnlyInCrawlerButNotInSiteMap,
-            IEnumerable<ContentLoadResult> expectedOnlyInSiteMapButNotInCrawler,
-            IEnumerable<ContentLoadResult> compositeResult)
+        public async Task AllMethodsInOneTest(
+            IList<ContentLoadResult> crawlerResults,
+            IList<ContentLoadResult> siteMapResults,
+            IList<ContentLoadResult> expectedOnlyInCrawlerButNotInSiteMap,
+            IList<ContentLoadResult> expectedOnlyInSiteMapButNotInCrawler,
+            IList<ContentLoadResult> expectedCompositeResult)
         {
-            // IReportService reportService = new ReportService();
-            // reportService.AddCrawlerResultsAsync(crawlerResults);
-            // reportService.AddSiteMapExplorerResultsAsync(siteMapResults);
-            //
-            // var onlyInCrawlerResults = reportService.GetUniqCrawlerResults().ToList();
-            // var onlyInSiteMapResults = reportService.GetUniqInSiteMapResults().ToList();
-            //
-            // var compositeReport = reportService.GetCompositeReportAsync().ToList();
-            //
-            // Assert.Empty(onlyInCrawlerResults.Except(expectedOnlyInCrawlerButNotInSiteMap));
-            //
-            // Assert.Empty(onlyInSiteMapResults.Except(expectedOnlyInSiteMapButNotInCrawler));
-            //
-            // Assert.Empty(compositeResult.Except(compositeReport));
+            var mockDao = new Mock<IDao<ContentLoadResult>>();
+            
+            mockDao.Setup(dao => dao.GetCrawlerResultsData("https://site.com"))
+                .ReturnsAsync(crawlerResults);
+            mockDao.Setup(dao => dao.GetSiteMapResultsData("https://site.com"))
+                .ReturnsAsync(siteMapResults);
+
+            IReportService reportService = new ReportService(mockDao.Object);
+
+            var onlyInCrawlerResults = 
+                (await reportService.GetUniqCrawlerResults("https://site.com"))
+                .ToList();
+            
+            var onlyInSiteMapResults = 
+                (await reportService.GetUniqInSiteMapResults("https://site.com"))
+                .ToList();
+            
+            var compositeReport = 
+                (await reportService.GetCompositeReportAsync("https://site.com"))
+                .ToList();
+            
+            Assert.Equal(expectedOnlyInCrawlerButNotInSiteMap, onlyInCrawlerResults);
+            Assert.Equal(expectedOnlyInSiteMapButNotInCrawler, onlyInSiteMapResults);
+            Assert.Equal(expectedCompositeResult, compositeReport);
+            mockDao.Verify(dao => dao.GetCrawlerResultsData("https://site.com"), Times.Exactly(3));
+        }
+        
+        [Theory]
+        [ClassData(typeof(ReportData))]
+        public async Task AddCrawlerResultsAsync_HostUrl_ExpectedContentLoadResultsCollection(
+            IList<ContentLoadResult> crawlerResults,
+            IList<ContentLoadResult> siteMapResults,
+            IList<ContentLoadResult> expectedOnlyInCrawlerButNotInSiteMap,
+            IList<ContentLoadResult> expectedOnlyInSiteMapButNotInCrawler,
+            IList<ContentLoadResult> compositeResult)
+        {
+            var mockDao = new Mock<IDao<ContentLoadResult>>();
+            IReportService reportService = new ReportService(mockDao.Object);
+            mockDao.Setup(dao => dao.SaveCrawlerResultsDataAsync("https://site.com", crawlerResults))
+                .ReturnsAsync(crawlerResults.Count);
+            
+            await reportService.AddCrawlerResultsAsync("https://site.com", crawlerResults);
+            
+            mockDao.Verify(dao => dao.SaveCrawlerResultsDataAsync("https://site.com", crawlerResults), () => Times.Exactly(1));
+        }
+        
+        [Theory]
+        [ClassData(typeof(ReportData))]
+        public async Task AddSiteMapExplorerResultsAsync_HostUrl_ExpectedContentLoadResultsCollection(
+            IList<ContentLoadResult> crawlerResults,
+            IList<ContentLoadResult> siteMapResults,
+            IList<ContentLoadResult> expectedOnlyInCrawlerButNotInSiteMap,
+            IList<ContentLoadResult> expectedOnlyInSiteMapButNotInCrawler,
+            IList<ContentLoadResult> compositeResult)
+        {
+            var mockDao = new Mock<IDao<ContentLoadResult>>();
+            IReportService reportService = new ReportService(mockDao.Object);
+            mockDao.Setup(dao => dao.SaveCrawlerResultsDataAsync("https://site.com", siteMapResults))
+                .ReturnsAsync(siteMapResults.Count);
+            
+            await reportService.AddCrawlerResultsAsync("https://site.com", siteMapResults);
+            
+            mockDao.Verify(dao => dao.SaveCrawlerResultsDataAsync("https://site.com", siteMapResults), () => Times.Exactly(1));
         }
     }
 
