@@ -1,29 +1,32 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using SiteEvaluator.Data;
+using SiteEvaluator.DataLoader.HttpLoader;
 
-namespace SiteEvaluator.ContentLoader
+namespace SiteEvaluator.DataLoader
 {
-    public class ContentLoadResult : IEquatable<ContentLoadResult>, IComparable<ContentLoadResult>, IHasContent
+    public abstract class ContentLoadResult<T> 
+        : IEquatable<ContentLoadResult<T>>, IComparable<ContentLoadResult<T>>
+        where T : class
     {
-        public ContentLoadResult(string pageUrl)
+        protected ContentLoadResult(string pageUrl)
         {
             PageUrl = pageUrl.EndsWith('/') ? pageUrl : pageUrl + '/';
         }
 
         public string PageUrl { get; }
 
-        public string Content { get; set; } = string.Empty;
+        public T? Content { get; set; }
 
         public HttpStatusCode HttpStatusCode { get; set; }
 
         public string ContentType { get; set; } = string.Empty;
 
-        public long PageLoadTime { get; set; }
+        public long ContentLoadTime { get; set; }
 
         public long Size { get; set; }
 
@@ -31,22 +34,26 @@ namespace SiteEvaluator.ContentLoader
 
         public Exception? Exception { get; set; }
 
-        public async Task ApplyHttpResponseAsync(HttpResponseMessage httpResponseMessage)
+        public async Task ApplyHttpResponseAsync(HttpExtendedResponse httpExtendedResponseMessage)
         {
-            HttpStatusCode = httpResponseMessage.StatusCode;
-            Content = await httpResponseMessage.Content.ReadAsStringAsync();
-            Size = Content.Length;
-            var contentTypeHeaders = httpResponseMessage.Content.Headers
-                .FirstOrDefault(header => header.Key.ToLower() == "content-type").Value;
+            HttpStatusCode = httpExtendedResponseMessage.StatusCode;
+            
+            Content = await ApplyContent(httpExtendedResponseMessage.Content);
+            
+            Size = (await httpExtendedResponseMessage.Content.ReadAsStreamAsync()).Length;
+            
+            var contentTypeHeaders = httpExtendedResponseMessage.Content.Headers
+                .FirstOrDefault(header => header.Key.ToLower() == "content-type")
+                .Value ?? new List<string>();
 
-            if (contentTypeHeaders != null)
-            {
-                var stringBuilder = new StringBuilder().AppendJoin("; ", contentTypeHeaders);
-                ContentType = stringBuilder.ToString();
-            }
+            var contentTypeBuilder = new StringBuilder().AppendJoin("; ", contentTypeHeaders);
+            
+            ContentType = contentTypeBuilder.ToString();
+
+            ContentLoadTime = httpExtendedResponseMessage.LoadingTime;
         }
 
-        public bool Equals(ContentLoadResult? other)
+        public bool Equals(ContentLoadResult<T>? other)
         {
             if (ReferenceEquals(null, other)) 
                 return false;
@@ -68,12 +75,12 @@ namespace SiteEvaluator.ContentLoader
             if (obj.GetType() != GetType()) 
                 return false;
             
-            return Equals((ContentLoadResult)obj);
+            return Equals((ContentLoadResult<T>)obj);
         }
         
         public void ClearContent()
         {
-            Content = string.Empty;
+            Content = null;
         }
 
         public override int GetHashCode()
@@ -84,11 +91,11 @@ namespace SiteEvaluator.ContentLoader
         public override string ToString()
         {
             return IsSuccess
-                ? $"Page URL: {PageUrl}, Status code: {HttpStatusCode}, Page load time: {PageLoadTime}ms"
+                ? $"Page URL: {PageUrl}, Status code: {HttpStatusCode}, Page load time: {ContentLoadTime}ms"
                 : $"Page URL: {PageUrl}, Is success: {IsSuccess}, Error message: {Exception?.Message}";
         }
 
-        public int CompareTo(ContentLoadResult? other)
+        public int CompareTo(ContentLoadResult<T>? other)
         {
             if (ReferenceEquals(this, other))
                 return 0;
@@ -96,7 +103,9 @@ namespace SiteEvaluator.ContentLoader
             if (ReferenceEquals(null, other))
                 return 1;
             
-            return PageLoadTime.CompareTo(other.PageLoadTime);
+            return ContentLoadTime.CompareTo(other.ContentLoadTime);
         }
+
+        protected abstract Task<T?> ApplyContent(HttpContent httpContent);
     }
 }

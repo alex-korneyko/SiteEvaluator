@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.DataLoader;
 
 namespace SiteEvaluator.Presentation
 {
     public interface IReportService
     {
-        Task AddCrawlerResultsAsync(string hostUrl, IEnumerable<ContentLoadResult> crawlerResults);
-        Task AddSiteMapExplorerResultsAsync(string hostUrl, IEnumerable<ContentLoadResult> siteMapExploreResults);
-        Task<IEnumerable<ContentLoadResult>> GetCrawlerResultsAsync(string hostUrl);
-        Task<IEnumerable<ContentLoadResult>> GetSiteMapResultsAsync(string hostUrl);
-        Task<IEnumerable<ContentLoadResult>> GetUniqInSiteMapResults(string hostUrl);
-        Task<IEnumerable<ContentLoadResult>> GetUniqCrawlerResults(string hostUrl);
-        Task<IEnumerable<ContentLoadResult>> GetCompositeReportAsync(string hostUrl);
+        Task AddCrawlerResultsAsync(string hostUrl, IEnumerable<PageInfo> crawlerResults);
+        Task AddSiteMapExplorerResultsAsync(string hostUrl, IEnumerable<PageInfo> siteMapExploreResults);
+        Task<IEnumerable<PageInfo>> GetCrawlerResultsAsync(string hostUrl);
+        Task<IEnumerable<PageInfo>> GetSiteMapResultsAsync(string hostUrl);
+        Task<IEnumerable<PageInfo>> GetUniqInSiteMapResults(string hostUrl);
+        Task<IEnumerable<PageInfo>> GetUniqCrawlerResults(string hostUrl);
+        Task<IEnumerable<PageInfo>> GetCompositeReportAsync(string hostUrl);
     }
 }

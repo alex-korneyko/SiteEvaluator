@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.DataLoader;
 
 namespace SiteEvaluator.SiteMapExploring
 {
     public interface ISiteMapExplorer
     {
-        Task<IList<ContentLoadResult>> ExploreAsync(string hostUrl, Action<ExploreSettings>? exploreSettings);
+        Task<IList<PageInfo>> ExploreAsync(string hostUrl, Action<ExploreSettings>? exploreSettings);
     }
 }

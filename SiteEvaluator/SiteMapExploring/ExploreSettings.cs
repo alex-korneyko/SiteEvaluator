@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.DataLoader;
 
 namespace SiteEvaluator.SiteMapExploring
 {
@@ -8,6 +8,7 @@ namespace SiteEvaluator.SiteMapExploring
     {
         public bool LoadContent { get; set; } = false;
         public List<string> UrlsForExcludeLoadContent { get; set; } = new();
-        public Action<ContentLoadResult>? ExploreEvent { get; set; }
+        public Action<StringLoadResult>? ExploreHtmlLoadedEvent { get; set; }
+        public Action<ImageLoadResult>? ExploreImageLoadedEvent { get; set; }
     }
 }

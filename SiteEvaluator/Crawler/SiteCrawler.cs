@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.DataLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Nodes;
 
@@ -10,92 +11,124 @@ namespace SiteEvaluator.Crawler
 {
     public class SiteCrawler : ISiteCrawler
     {
-        private readonly IHttpContentLoaderService _httpContentLoaderService;
+        private readonly IContentLoaderService _contentLoaderService;
         private readonly IHtmlParseService _htmlParseService;
-        private readonly List<ContentLoadResult> _result = new();
+        private readonly Dictionary<string, PageInfo> _result = new();
         private readonly CrawlerSettings _settings = new();
 
-        public SiteCrawler(IHttpContentLoaderService httpContentLoaderService, IHtmlParseService htmlParseService)
+        public SiteCrawler(IContentLoaderService contentLoaderService, IHtmlParseService htmlParseService)
         {
-            _httpContentLoaderService = httpContentLoaderService;
+            _contentLoaderService = contentLoaderService;
             _htmlParseService = htmlParseService;
         }
 
-        public async Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null)
+        public async Task<IList<PageInfo>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null)
         {
             crawlerSettings?.Invoke(_settings);
 
             hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
 
-            ContentLoadResult pageLoadResult = await _httpContentLoaderService.LoadContentAsync(hostUrl);
-            
-            _result.Add(pageLoadResult);
-            _settings.CrawlEvent?.Invoke(pageLoadResult);
+            StringLoadResult stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUrl);
+            var pageInfo = new PageInfo(stringLoadResult);
 
-            var pageBody = string.Empty;
+            _result.Add(hostUrl, pageInfo);
+            _settings.CrawlHtmlLoadedEvent?.Invoke(stringLoadResult);
 
-            if (pageLoadResult.HttpStatusCode == HttpStatusCode.OK)
+            // var pageBody = string.Empty;
+
+            if (stringLoadResult.HttpStatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(pageInfo.Content))
             {
-                pageBody = _htmlParseService.ExtractBodyNode(pageLoadResult.Content);
+                await ScanLinksAsync(hostUrl, pageInfo, 0);
             }
 
-            await ScanLinksAsync(pageBody, hostUrl);
+            // await ScanLinksAsync(pageInfo, 0);
 
-            return _result;
+            return _result.Values.ToList();
         }
 
-        private async Task ScanLinksAsync(string pageBody, string hostUrl)
+        private async Task ScanLinksAsync(string hostUrl, PageInfo pageInfo, int level)
         {
+            await ScanMedia(pageInfo);
+            
+            var pageBody = _htmlParseService.ExtractBodyNode(pageInfo.Content);
+            
             var allTagFullStrings = _htmlParseService.GetNodesAsStringsList<A>(pageBody);
 
             foreach (var tagFullString in allTagFullStrings)
             {
-                var aLinkTag = _htmlParseService.DeserializeToNode<A>(tagFullString);
+                var aNode = _htmlParseService.DeserializeToNode<A>(tagFullString);
 
-                if (aLinkTag == null)
+                if (aNode == null)
                     continue;
 
-                var fullUrl = GetFullUrl(aLinkTag, hostUrl);
-
-                if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new ContentLoadResult(fullUrl)))
+                if (!_settings.IncludeNofollowLinks && aNode.Rel == "nofollow")
+                    continue;
+                
+                var fullUrl = GetFullUrl(aNode, hostUrl);
+                if (string.IsNullOrEmpty(fullUrl))
                     continue;
 
-                if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow")
-                    continue;
-
-                var pageLoadResult = await _httpContentLoaderService.LoadContentAsync(fullUrl);
-
-                _result.Add(pageLoadResult);
-                _settings.CrawlEvent?.Invoke(pageLoadResult);
-
-                if (!pageLoadResult.IsSuccess)
-                    continue;
-
-                await ScanLinksAsync(pageLoadResult.Content, hostUrl);
-            }
-        }
-
-        private string GetFullUrl(A aTag, string hostUrl)
-        {
-            if (aTag.Href != null)
-            {
-                aTag.Href = aTag.Href.EndsWith('/') ? aTag.Href : aTag.Href + "/";
-
-                if (aTag.Href.StartsWith(hostUrl))
+                if (!fullUrl.StartsWith(hostUrl))
                 {
-                    return aTag.Href;
+                    pageInfo.ExternalUrls.Add(fullUrl);
+                    continue;
                 }
-            }
+                
+                pageInfo.InnerUrls.Add(fullUrl);
 
-            if (aTag.Href == null 
-                || aTag.Href.StartsWith("http") 
-                || !aTag.Href.StartsWith('/')
-                || aTag.Href is "#" or "\\")
-            {
-                return "";
-            }
+                if (_result.ContainsKey(fullUrl))
+                    continue;
 
-            return hostUrl + aTag.Href;
+                var htmlLoadResult = await _contentLoaderService.LoadHtmlAsync(fullUrl);
+                var newPageInfo = new PageInfo(htmlLoadResult, level);
+
+                _result.Add(fullUrl, newPageInfo);
+                _settings.CrawlHtmlLoadedEvent?.Invoke(htmlLoadResult);
+
+                if (!htmlLoadResult.IsSuccess)
+                    continue;
+
+                await ScanLinksAsync(hostUrl, newPageInfo, ++level);
+            }
         }
+
+        private string GetFullUrl(A aNode, string hostUrl)
+        {
+            if (aNode.Href is null or "#" or "\\")
+                return string.Empty;
+
+            if (aNode.Href.Contains(':'))
+                return string.Empty;
+
+            aNode.Href = aNode.Href.EndsWith('/') ? aNode.Href : aNode.Href + "/";
+
+            if (aNode.Href.StartsWith("http"))
+            {
+                return aNode.Href;
+            }
+
+            return hostUrl + aNode.Href;
+        }
+
+        private async Task ScanMedia(PageInfo pageInfo)
+        {
+            var imgNodeStrings = _htmlParseService.GetNodesAsStringsList<Img>(pageInfo.Content);
+
+            foreach (var imgNodeString in imgNodeStrings)
+            {
+                var imgNode = _htmlParseService.DeserializeToNode<Img>(imgNodeString);
+                if (imgNode == null || string.IsNullOrEmpty(imgNode.Src))
+                    continue;
+                
+                pageInfo.MediaUrls.Add(imgNode.Src);
+                
+                // var imageLoadResult = await _contentLoaderService.LoadImageAsync(imgNode.Src);
+                var imageLoadResult = new ImageLoadResult(imgNode.Src);
+                _settings.CrawlImageLoadedEvent?.Invoke(imageLoadResult);
+                
+                pageInfo.TotalLoadTime += imageLoadResult.ContentLoadTime;
+                pageInfo.TotalSize += imageLoadResult.Size;
+            }
+        } 
     }
 }

@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using SiteEvaluator.ConsoleUI.ConsoleXtend;
-using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Crawler;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExploring;
@@ -27,12 +26,12 @@ namespace SiteEvaluator.ConsoleUI
             if (logToConsole) 
                 ConsoleX.WriteLine.Warning($"Start crawling: {hostUrl}\n\t↓↓↓");
             
-            IList<ContentLoadResult> siteCrawlerResults = await _siteCrawler
+            IList<PageInfo> siteCrawlerResults = await _siteCrawler
                 .CrawlAsync(hostUrl, settings =>
                 {
                     settings.IncludeNofollowLinks = includeNofollowLinks;
-                    settings.CrawlEvent = logToConsole 
-                        ? result => ConsoleX.WriteLine.Comment(result.ToString())
+                    settings.CrawlHtmlLoadedEvent = logToConsole 
+                        ? result => ConsoleX.WriteLine.Info($"Page: {result.ToString()}")
                         : null;
                 });
             
@@ -44,14 +43,14 @@ namespace SiteEvaluator.ConsoleUI
             if (logToConsole) 
                 ConsoleX.WriteLine.Warning($"Start sitemap.xml exploring: {hostUrl}\nLoad content...\n\t↓↓↓");
             
-            IList<ContentLoadResult> siteMapExplorerResults = await _siteMapExplorer
+            IList<PageInfo> siteMapExplorerResults = await _siteMapExplorer
                 .ExploreAsync(hostUrl, settings =>
                 {
                     settings.LoadContent = true;
                     settings.UrlsForExcludeLoadContent
                         .AddRange(siteCrawlerResults
-                            .Select(result => result.PageUrl));
-                    settings.ExploreEvent = logToConsole 
+                            .Select(result => result.Url));
+                    settings.ExploreHtmlLoadedEvent = logToConsole 
                         ? result => ConsoleX.WriteLine.Comment(result.ToString())
                         : null;
                 });
@@ -69,7 +68,7 @@ namespace SiteEvaluator.ConsoleUI
             ConsoleX.WriteLine.Warning("Urls FOUNDED IN SITEMAP.XML but not founded after crawling a web site");
 
             var links = (await _reportService.GetUniqInSiteMapResults(hostUrl))
-                .Select(result => result.PageUrl)
+                .Select(result => result.Url)
                 .ToList();
             
             foreach (var link in links)
@@ -85,7 +84,7 @@ namespace SiteEvaluator.ConsoleUI
             ConsoleX.WriteLine.Warning("Urls FOUNDED BY CRAWLING THE WEBSITE but not in sitemap.xml");
 
             var links = (await _reportService.GetUniqCrawlerResults(hostUrl))
-                .Select(result => result.PageUrl)
+                .Select(result => result.Url)
                 .ToList();
             
             foreach (var link in links)
