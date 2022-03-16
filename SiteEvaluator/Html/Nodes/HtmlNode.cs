@@ -1,4 +1,4 @@
-namespace SiteEvaluator.Html.Tags
+namespace SiteEvaluator.Html.Nodes
 {
     public abstract class HtmlNode
     {

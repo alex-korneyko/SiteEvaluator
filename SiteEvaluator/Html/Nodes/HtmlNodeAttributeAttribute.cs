@@ -1,6 +1,6 @@
 using System;
 
-namespace SiteEvaluator.Html.Tags
+namespace SiteEvaluator.Html.Nodes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class HtmlNodeAttributeAttribute : Attribute
