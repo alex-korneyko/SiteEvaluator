@@ -1,5 +1,5 @@
 using SiteEvaluator.Html;
-using SiteEvaluator.Html.Tags;
+using SiteEvaluator.Html.Nodes;
 using Xunit;
 
 namespace SiteEvaluator.Tests
