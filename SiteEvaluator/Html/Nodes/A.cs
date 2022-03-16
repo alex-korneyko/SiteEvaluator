@@ -1,4 +1,4 @@
-namespace SiteEvaluator.Html.Tags
+namespace SiteEvaluator.Html.Nodes
 { 
     /**
      * Class that represents HTML 'a' tag

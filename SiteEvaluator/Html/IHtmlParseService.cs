@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using SiteEvaluator.Html.Tags;
+using SiteEvaluator.Html.Nodes;
 
 namespace SiteEvaluator.Html
 {

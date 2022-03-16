@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using SiteEvaluator.ContentLoader;
 using SiteEvaluator.Html;
-using SiteEvaluator.Html.Tags;
+using SiteEvaluator.Html.Nodes;
 
 namespace SiteEvaluator.Crawler
 {
