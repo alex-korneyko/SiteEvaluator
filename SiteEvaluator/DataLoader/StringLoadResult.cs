@@ -5,11 +5,11 @@ namespace SiteEvaluator.DataLoader
 {
     public class StringLoadResult : ContentLoadResult<string>
     {
-        public StringLoadResult(string pageUrl) : base(pageUrl)
+        public StringLoadResult(string requestedUrl) : base(requestedUrl)
         {
         }
 
-        protected override async Task<string> ApplyContent(HttpContent httpContent)
+        protected override async Task<string?> ApplyContent(HttpContent httpContent)
         {
             var stringContent = await httpContent.ReadAsStringAsync();
             

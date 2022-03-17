@@ -19,7 +19,7 @@ namespace SiteEvaluator.Xml
                 var deserialize = (SiteMap)xmlSerializer.Deserialize(stream)!;
                 return deserialize;
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
                 return new SiteMap();
             }

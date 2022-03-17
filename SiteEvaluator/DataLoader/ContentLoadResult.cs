@@ -13,12 +13,13 @@ namespace SiteEvaluator.DataLoader
         : IEquatable<ContentLoadResult<T>>, IComparable<ContentLoadResult<T>>
         where T : class
     {
-        protected ContentLoadResult(string pageUrl)
+        protected ContentLoadResult(string requestedUrl)
         {
-            PageUrl = pageUrl.EndsWith('/') ? pageUrl : pageUrl + '/';
+            // RequestedUrl = requestedUrl.EndsWith('/') ? requestedUrl : requestedUrl + '/';
+            RequestedUrl = requestedUrl;
         }
 
-        public string PageUrl { get; }
+        public string RequestedUrl { get; }
 
         public T? Content { get; set; }
 
@@ -61,7 +62,7 @@ namespace SiteEvaluator.DataLoader
             if (ReferenceEquals(this, other)) 
                 return true;
             
-            return PageUrl == other.PageUrl;
+            return RequestedUrl == other.RequestedUrl;
         }
 
         public override bool Equals(object? obj)
@@ -85,14 +86,14 @@ namespace SiteEvaluator.DataLoader
 
         public override int GetHashCode()
         {
-            return PageUrl.GetHashCode();
+            return RequestedUrl.GetHashCode();
         }
 
         public override string ToString()
         {
             return IsSuccess
-                ? $"Page URL: {PageUrl}, Status code: {HttpStatusCode}, Page load time: {ContentLoadTime}ms"
-                : $"Page URL: {PageUrl}, Is success: {IsSuccess}, Error message: {Exception?.Message}";
+                ? $"URL: {RequestedUrl}, Status code: {HttpStatusCode}, Load time: {ContentLoadTime}ms"
+                : $"URL: {RequestedUrl}, Is success: {IsSuccess}, Error message: {Exception?.Message}";
         }
 
         public int CompareTo(ContentLoadResult<T>? other)

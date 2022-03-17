@@ -5,11 +5,11 @@ namespace SiteEvaluator.DataLoader
 {
     public class FileLoadResult : ContentLoadResult<byte[]>
     {
-        public FileLoadResult(string pageUrl) : base(pageUrl)
+        public FileLoadResult(string requestedUrl) : base(requestedUrl)
         {
         }
 
-        protected override async Task<byte[]> ApplyContent(HttpContent httpContent)
+        protected override async Task<byte[]?> ApplyContent(HttpContent httpContent)
         {
             return await httpContent.ReadAsByteArrayAsync();
         }

@@ -13,37 +13,7 @@ namespace SiteEvaluator.DataLoader
         {
             _httpLoaderService = httpLoaderService;
         }
-
-        // public async Task<ContentLoadResult> LoadContentAsync(string pageUrl)
-        // {
-        //     var stopwatch = new Stopwatch();
-        //     var pageLoadResult = new ContentLoadResult(pageUrl);
-        //
-        //     try
-        //     {
-        //         if (!pageUrl.StartsWith("http://") && !pageUrl.StartsWith("https://"))
-        //             throw new ArgumentException($"Wrong URL: {pageUrl}");
-        //
-        //         stopwatch.Start();
-        //         var httpResponseMessage = await _httpClient.GetAsync(pageUrl);
-        //         stopwatch.Stop();
-        //
-        //         pageLoadResult.PageLoadTime = stopwatch.ElapsedMilliseconds;
-        //
-        //         await pageLoadResult.ApplyHttpResponseAsync(httpResponseMessage);
-        //     }
-        //     catch (Exception e)
-        //     {
-        //         stopwatch.Stop();
-        //         pageLoadResult.IsSuccess = false;
-        //         pageLoadResult.Exception = e;
-        //
-        //         return pageLoadResult;
-        //     }
-        //
-        //     return pageLoadResult;
-        // }
-        //
+        
         public async Task<StringLoadResult> LoadRobotsAsync(string hostUrl)
         {
             var robotsUrl = (hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl) + "/robots.txt";
@@ -121,13 +91,24 @@ namespace SiteEvaluator.DataLoader
 
         public async Task<ImageLoadResult> LoadImageAsync(string requestUri)
         {
-            var httpExtendedResponse = await _httpLoaderService.LoadAsync(requestUri);
+            try
+            {
+                var httpExtendedResponse = await _httpLoaderService.LoadAsync(requestUri);
 
-            var imageLoadResult = new ImageLoadResult(requestUri);
+                var imageLoadResult = new ImageLoadResult(requestUri);
 
-            await imageLoadResult.ApplyHttpResponseAsync(httpExtendedResponse);
+                await imageLoadResult.ApplyHttpResponseAsync(httpExtendedResponse);
 
-            return imageLoadResult;
+                return imageLoadResult;
+            }
+            catch (Exception e)
+            {
+                return new ImageLoadResult(requestUri)
+                {
+                    IsSuccess = false,
+                    Exception = e
+                };
+            }
         }
         
         public async Task<FileLoadResult> LoadFile(string requestUri)

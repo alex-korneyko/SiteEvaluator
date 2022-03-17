@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using SiteEvaluator.ConsoleUI.ConsoleXtend;
 using SiteEvaluator.Crawler;
@@ -31,7 +33,10 @@ namespace SiteEvaluator.ConsoleUI
                 {
                     settings.IncludeNofollowLinks = includeNofollowLinks;
                     settings.CrawlHtmlLoadedEvent = logToConsole 
-                        ? result => ConsoleX.WriteLine.Info($"Page: {result.ToString()}")
+                        ? result => ConsoleX.WriteLine.Info($"Page: {result}")
+                        : null;
+                    settings.CrawlImageLoadedEvent = logToConsole
+                        ? result => ConsoleX.WriteLine.Comment($"\tImage: {result}")
                         : null;
                 });
             
@@ -101,11 +106,8 @@ namespace SiteEvaluator.ConsoleUI
 
             ConsoleX.WriteLine.Success("Composite report sorted by timings:");
             
-            foreach (var contentLoadResult in compositeReport)
-            {
-                ConsoleX.WriteLine.Info(contentLoadResult.ToString());
-            }
-            
+            PagesInfoTableConsoleComponent(compositeReport.ToList());
+
             ConsoleX.WriteLine.Info();
             
             ConsoleX.WriteLine.Success("Urls(html documents) found after crawling a website: " +
@@ -113,6 +115,25 @@ namespace SiteEvaluator.ConsoleUI
             
             ConsoleX.WriteLine.Success($"Urls found in sitemap: " +
                                        $"{(await _reportService.GetSiteMapResultsAsync(hostUrl)).Count()}");
+        }
+
+        private void PagesInfoTableConsoleComponent(IList<PageInfo> pages)
+        {
+            var maxUrlLength = pages.Max(page => page.Url.Length);
+
+            foreach (var pageInfo in pages)
+            {
+                var sbUrl = new StringBuilder(pageInfo.Url);
+                sbUrl.Append(' ').AppendJoin("", Enumerable.Repeat('.', maxUrlLength - pageInfo.Url.Length));
+
+                ConsoleX.Write.Info($"Url: {sbUrl}");
+                ConsoleX.Write.Info($"   Loading: {pageInfo.TotalLoadTime}ms");
+                ConsoleX.Write.Info($"   Size: {Math.Round((double)pageInfo.TotalSize / 1024, 2)}kb");
+                // ConsoleX.Write.Info($"   Level: {pageInfo.Level}");
+                ConsoleX.Write.Info($"   Inner links: {pageInfo.InnerUrls.Count}");
+                ConsoleX.Write.Info($"   Outer links: {pageInfo.OuterUrls.Count}");
+                ConsoleX.WriteLine.Info($"   Images: {pageInfo.MediaUrls.Count}");
+            }
         }
     }
 }

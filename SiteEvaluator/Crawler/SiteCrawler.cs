@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace SiteEvaluator.Crawler
     {
         private readonly IContentLoaderService _contentLoaderService;
         private readonly IHtmlParseService _htmlParseService;
-        private readonly Dictionary<string, PageInfo> _result = new();
+        private readonly List<PageInfo> _result = new();
         private readonly CrawlerSettings _settings = new();
 
         public SiteCrawler(IContentLoaderService contentLoaderService, IHtmlParseService htmlParseService)
@@ -29,38 +30,34 @@ namespace SiteEvaluator.Crawler
             hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
 
             StringLoadResult stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUrl);
-            var pageInfo = new PageInfo(stringLoadResult);
+            
+            var pageInfo = new PageInfo(stringLoadResult)
+            {
+                Level = 0
+            };
 
-            _result.Add(hostUrl, pageInfo);
+            _result.Add(pageInfo);
             _settings.CrawlHtmlLoadedEvent?.Invoke(stringLoadResult);
-
-            // var pageBody = string.Empty;
 
             if (stringLoadResult.HttpStatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(pageInfo.Content))
             {
-                await ScanLinksAsync(hostUrl, pageInfo, 0);
+                await ScanLinksAsync(hostUrl, pageInfo);
             }
-
-            // await ScanLinksAsync(pageInfo, 0);
-
-            return _result.Values.ToList();
+            
+            return _result;
         }
 
-        private async Task ScanLinksAsync(string hostUrl, PageInfo pageInfo, int level)
+        private async Task ScanLinksAsync(string hostUrl, PageInfo pageInfo)
         {
-            await ScanMedia(pageInfo);
+            await ScanAndApplyMediaLinks(pageInfo);
+            ScanAndApplyALinks(hostUrl, pageInfo);
             
             var pageBody = _htmlParseService.ExtractBodyNode(pageInfo.Content);
             
-            var allTagFullStrings = _htmlParseService.GetNodesAsStringsList<A>(pageBody);
+            var aNodes = _htmlParseService.GetAllNodes<A>(pageBody);
 
-            foreach (var tagFullString in allTagFullStrings)
+            foreach (var aNode in aNodes)
             {
-                var aNode = _htmlParseService.DeserializeToNode<A>(tagFullString);
-
-                if (aNode == null)
-                    continue;
-
                 if (!_settings.IncludeNofollowLinks && aNode.Rel == "nofollow")
                     continue;
                 
@@ -70,26 +67,44 @@ namespace SiteEvaluator.Crawler
 
                 if (!fullUrl.StartsWith(hostUrl))
                 {
-                    pageInfo.ExternalUrls.Add(fullUrl);
+                    pageInfo.OuterUrls.Add(fullUrl);
                     continue;
                 }
-                
-                pageInfo.InnerUrls.Add(fullUrl);
 
-                if (_result.ContainsKey(fullUrl))
+                if (!CompareUrls(pageInfo.Url, fullUrl))
+                    pageInfo.InnerUrls.Add(fullUrl);
+
+                var alreadyCrawledPage = _result.FirstOrDefault(page => CompareUrls(page.Url, fullUrl));
+                if (alreadyCrawledPage != null)
+                {
+                    alreadyCrawledPage.Level = alreadyCrawledPage.Level > (pageInfo.Level + 1) 
+                        ? pageInfo.Level + 1 
+                        : alreadyCrawledPage.Level;
                     continue;
+                }
 
                 var htmlLoadResult = await _contentLoaderService.LoadHtmlAsync(fullUrl);
-                var newPageInfo = new PageInfo(htmlLoadResult, level);
+                if (htmlLoadResult.HttpStatusCode != HttpStatusCode.OK || !htmlLoadResult.ContentType.Contains("text/html"))
+                    continue;
+                
+                var newPageInfo = new PageInfo(htmlLoadResult, ++pageInfo.Level);
 
-                _result.Add(fullUrl, newPageInfo);
+                _result.Add(newPageInfo);
                 _settings.CrawlHtmlLoadedEvent?.Invoke(htmlLoadResult);
 
                 if (!htmlLoadResult.IsSuccess)
                     continue;
 
-                await ScanLinksAsync(hostUrl, newPageInfo, ++level);
+                await ScanLinksAsync(hostUrl, newPageInfo);
             }
+        }
+
+        private bool CompareUrls(string url1, string url2)
+        {
+            url1 = url1.EndsWith('/') ? url1[..^1] : url1;
+            url2 = url2.EndsWith('/') ? url2[..^1] : url2;
+
+            return url1.Equals(url2);
         }
 
         private string GetFullUrl(A aNode, string hostUrl)
@@ -97,38 +112,52 @@ namespace SiteEvaluator.Crawler
             if (aNode.Href is null or "#" or "\\")
                 return string.Empty;
 
-            if (aNode.Href.Contains(':'))
+            if (aNode.Href.StartsWith("http"))
+                return aNode.Href;
+
+            if (aNode.Href.StartsWith('#') || aNode.Href.Contains(':'))
                 return string.Empty;
 
-            aNode.Href = aNode.Href.EndsWith('/') ? aNode.Href : aNode.Href + "/";
-
-            if (aNode.Href.StartsWith("http"))
-            {
-                return aNode.Href;
-            }
-
-            return hostUrl + aNode.Href;
+            return hostUrl + (aNode.Href == "/" ? "" : aNode.Href);
         }
 
-        private async Task ScanMedia(PageInfo pageInfo)
+        private async Task  ScanAndApplyMediaLinks(PageInfo pageInfo)
         {
-            var imgNodeStrings = _htmlParseService.GetNodesAsStringsList<Img>(pageInfo.Content);
+            var allImgNodes = _htmlParseService.GetAllNodes<Img>(pageInfo.Content);
+            var tasks = new List<Task>();
 
-            foreach (var imgNodeString in imgNodeStrings)
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            
+            foreach (var imgNode in allImgNodes)
             {
-                var imgNode = _htmlParseService.DeserializeToNode<Img>(imgNodeString);
-                if (imgNode == null || string.IsNullOrEmpty(imgNode.Src))
+                if (string.IsNullOrEmpty(imgNode.Src))
                     continue;
-                
+            
                 pageInfo.MediaUrls.Add(imgNode.Src);
+
+                var loadImageTask = _contentLoaderService
+                    .LoadImageAsync(imgNode.Src)
+                    .ContinueWith(imageLoadResult =>
+                    {
+                        if (imageLoadResult.Result.IsSuccess)
+                            pageInfo.TotalSize += imageLoadResult.Result.Size;
+
+                        _settings.CrawlImageLoadedEvent?.Invoke(imageLoadResult.Result);
+                    });
                 
-                // var imageLoadResult = await _contentLoaderService.LoadImageAsync(imgNode.Src);
-                var imageLoadResult = new ImageLoadResult(imgNode.Src);
-                _settings.CrawlImageLoadedEvent?.Invoke(imageLoadResult);
-                
-                pageInfo.TotalLoadTime += imageLoadResult.ContentLoadTime;
-                pageInfo.TotalSize += imageLoadResult.Size;
+                tasks.Add(loadImageTask);
             }
-        } 
+
+            await Task.WhenAll(tasks);
+            
+            stopwatch.Stop();
+            pageInfo.TotalLoadTime += stopwatch.ElapsedMilliseconds;
+        }
+
+        private void ScanAndApplyALinks(string hostUrl, PageInfo pageInfo)
+        {
+            
+        }
     }
 }

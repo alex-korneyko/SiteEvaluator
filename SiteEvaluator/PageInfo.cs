@@ -5,12 +5,12 @@ using SiteEvaluator.DataLoader;
 
 namespace SiteEvaluator
 {
-    public class PageInfo: IEquatable<PageInfo>, IHasContent
+    public class PageInfo: IEquatable<PageInfo>, IComparable<PageInfo>, IHasContent
     {
-        public string Url { get; }
-        public string Content { get; set; }
+        public string Url { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
         public IList<string> InnerUrls { get; set; } = new List<string>();
-        public IList<string> ExternalUrls { get; set; } = new List<string>();
+        public IList<string> OuterUrls { get; set; } = new List<string>();
         public IList<string> MediaUrls { get; set; } = new List<string>();
         public long TotalLoadTime { get; set; }
         public int Level { get; set; }
@@ -22,10 +22,10 @@ namespace SiteEvaluator
 
         public PageInfo(StringLoadResult stringLoadResult, int level = 0)
         {
-            Url = stringLoadResult.PageUrl;
+            Url = stringLoadResult.RequestedUrl;
             Content = stringLoadResult.Content ?? string.Empty;
-            TotalLoadTime += stringLoadResult.ContentLoadTime;
-            TotalSize += stringLoadResult.Size;
+            TotalLoadTime = stringLoadResult.ContentLoadTime;
+            TotalSize = stringLoadResult.Size;
             Level = level;
         }
         
@@ -62,6 +62,17 @@ namespace SiteEvaluator
         public override int GetHashCode()
         {
             return Url.GetHashCode();
+        }
+
+        public int CompareTo(PageInfo? other)
+        {
+            if (ReferenceEquals(this, other))
+                return 0;
+            
+            if (ReferenceEquals(null, other))
+                return 1;
+            
+            return TotalLoadTime.CompareTo(other.TotalLoadTime);
         }
     }
 }

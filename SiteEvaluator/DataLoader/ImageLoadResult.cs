@@ -7,7 +7,7 @@ namespace SiteEvaluator.DataLoader
 {
     public class ImageLoadResult : ContentLoadResult<Bitmap>
     {
-        public ImageLoadResult(string pageUrl) : base(pageUrl)
+        public ImageLoadResult(string requestedUrl) : base(requestedUrl)
         {
         }
 
@@ -21,7 +21,7 @@ namespace SiteEvaluator.DataLoader
 
                 return bitmap;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // ignored
             }
