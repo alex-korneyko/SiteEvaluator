@@ -1,5 +1,5 @@
 using System;
-using SiteEvaluator.Xml;
+using SiteEvaluator.SiteMapExploring.Parser;
 
 namespace SiteEvaluator.SiteMapExploring
 {

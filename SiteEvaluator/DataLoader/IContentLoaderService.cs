@@ -1,14 +1,21 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using SiteEvaluator.Html.Nodes;
 
 namespace SiteEvaluator.DataLoader
 {
     public interface IContentLoaderService
     {
-        // Task<ContentLoadResult> LoadContentAsync(string pageUrl);
-        Task<StringLoadResult> LoadRobotsAsync(string hostUrl);
-        Task<StringLoadResult> LoadSiteMapAsync(string hostUrl);
-        Task<StringLoadResult> LoadHtmlAsync(string requestUri);
-        Task<ImageLoadResult> LoadImageAsync(string requestUri);
-        Task<FileLoadResult> LoadFile(string requestUri);
+        Task<StringLoadResult> LoadRobotsAsync(Uri requestUri);
+        Task<StringLoadResult> LoadSiteMapAsync(Uri requestUri);
+        Task<StringLoadResult> LoadHtmlAsync(Uri requestUri);
+        Task<ImageLoadResult> LoadImageAsync(Uri requestUri);
+        Task<FileLoadResult> LoadFile(Uri requestUri);
+        Task ScanAndApplyMediaLinks(
+            PageInfo pageInfo,
+            IList<Img> allImgNodes,
+            bool loadImgContent = false,
+            Action<ImageLoadResult>? imageLoadedEvent = null);
     }
 }

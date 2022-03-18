@@ -8,6 +8,7 @@ namespace SiteEvaluator.SiteMapExploring
     {
         public bool LoadContent { get; set; } = false;
         public List<string> UrlsForExcludeLoadContent { get; set; } = new();
+        public bool LoadMedia { get; set; }
         public Action<StringLoadResult>? ExploreHtmlLoadedEvent { get; set; }
         public Action<ImageLoadResult>? ExploreImageLoadedEvent { get; set; }
     }

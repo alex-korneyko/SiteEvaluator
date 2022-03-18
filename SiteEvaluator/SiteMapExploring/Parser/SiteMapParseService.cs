@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace SiteEvaluator.Xml
+namespace SiteEvaluator.SiteMapExploring.Parser
 {
     public class SiteMapParseService : ISiteMapParseService
     {

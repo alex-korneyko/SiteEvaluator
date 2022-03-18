@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using SiteEvaluator.Common;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Nodes;
@@ -27,9 +27,9 @@ namespace SiteEvaluator.Crawler
         {
             crawlerSettings?.Invoke(_settings);
 
-            hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
+            var hostUri = new Uri(hostUrl);
 
-            StringLoadResult stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUrl);
+            StringLoadResult stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUri);
             
             var pageInfo = new PageInfo(stringLoadResult)
             {
@@ -41,49 +41,41 @@ namespace SiteEvaluator.Crawler
 
             if (stringLoadResult.HttpStatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(pageInfo.Content))
             {
-                await ScanLinksAsync(hostUrl, pageInfo);
+                await ScanLinksAsync(hostUri, pageInfo);
             }
             
             return _result;
         }
 
-        private async Task ScanLinksAsync(string hostUrl, PageInfo pageInfo)
+        private async Task ScanLinksAsync(Uri hostUri, PageInfo pageInfo)
         {
-            await ScanAndApplyMediaLinks(pageInfo);
-            ScanAndApplyALinks(hostUrl, pageInfo);
-            
-            var pageBody = _htmlParseService.ExtractBodyNode(pageInfo.Content);
-            
-            var aNodes = _htmlParseService.GetAllNodes<A>(pageBody);
+            var allImgNodes = _htmlParseService.GetAllNodes<Img>(pageInfo.Content);
+            await _contentLoaderService.ScanAndApplyMediaLinks(pageInfo, allImgNodes, _settings.LoadMedia, _settings.CrawlImageLoadedEvent);
 
-            foreach (var aNode in aNodes)
+            var aNodes = _htmlParseService.GetAllNodes<A>(pageInfo.Content);
+
+            pageInfo.OuterUrls = Utils.FilterOuterLinksNodes(aNodes, hostUri)
+                .Select(aNode => aNode.Href)
+                .Where(url => url != null)
+                .ToList()!;
+
+            var innerUrlANodes = Utils.FilterInnerLinkNodes(aNodes, hostUri);
+
+            foreach (var aNode in innerUrlANodes)
             {
                 if (!_settings.IncludeNofollowLinks && aNode.Rel == "nofollow")
                     continue;
-                
-                var fullUrl = GetFullUrl(aNode, hostUrl);
-                if (string.IsNullOrEmpty(fullUrl))
-                    continue;
 
-                if (!fullUrl.StartsWith(hostUrl))
-                {
-                    pageInfo.OuterUrls.Add(fullUrl);
-                    continue;
-                }
+                var currentNodeFullUri = new Uri(hostUri, aNode.Href);
 
-                if (!CompareUrls(pageInfo.Url, fullUrl))
-                    pageInfo.InnerUrls.Add(fullUrl);
+                if (!hostUri.AbsoluteUri.Equals(currentNodeFullUri.AbsoluteUri))
+                    pageInfo.InnerUrls.Add(currentNodeFullUri.AbsolutePath);
 
-                var alreadyCrawledPage = _result.FirstOrDefault(page => CompareUrls(page.Url, fullUrl));
+                var alreadyCrawledPage = _result.FirstOrDefault(page => page.Url.Equals(currentNodeFullUri.AbsoluteUri));
                 if (alreadyCrawledPage != null)
-                {
-                    alreadyCrawledPage.Level = alreadyCrawledPage.Level > (pageInfo.Level + 1) 
-                        ? pageInfo.Level + 1 
-                        : alreadyCrawledPage.Level;
                     continue;
-                }
 
-                var htmlLoadResult = await _contentLoaderService.LoadHtmlAsync(fullUrl);
+                var htmlLoadResult = await _contentLoaderService.LoadHtmlAsync(currentNodeFullUri);
                 if (htmlLoadResult.HttpStatusCode != HttpStatusCode.OK || !htmlLoadResult.ContentType.Contains("text/html"))
                     continue;
                 
@@ -95,69 +87,8 @@ namespace SiteEvaluator.Crawler
                 if (!htmlLoadResult.IsSuccess)
                     continue;
 
-                await ScanLinksAsync(hostUrl, newPageInfo);
+                await ScanLinksAsync(hostUri, newPageInfo);
             }
-        }
-
-        private bool CompareUrls(string url1, string url2)
-        {
-            url1 = url1.EndsWith('/') ? url1[..^1] : url1;
-            url2 = url2.EndsWith('/') ? url2[..^1] : url2;
-
-            return url1.Equals(url2);
-        }
-
-        private string GetFullUrl(A aNode, string hostUrl)
-        {
-            if (aNode.Href is null or "#" or "\\")
-                return string.Empty;
-
-            if (aNode.Href.StartsWith("http"))
-                return aNode.Href;
-
-            if (aNode.Href.StartsWith('#') || aNode.Href.Contains(':'))
-                return string.Empty;
-
-            return hostUrl + (aNode.Href == "/" ? "" : aNode.Href);
-        }
-
-        private async Task  ScanAndApplyMediaLinks(PageInfo pageInfo)
-        {
-            var allImgNodes = _htmlParseService.GetAllNodes<Img>(pageInfo.Content);
-            var tasks = new List<Task>();
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            
-            foreach (var imgNode in allImgNodes)
-            {
-                if (string.IsNullOrEmpty(imgNode.Src))
-                    continue;
-            
-                pageInfo.MediaUrls.Add(imgNode.Src);
-
-                var loadImageTask = _contentLoaderService
-                    .LoadImageAsync(imgNode.Src)
-                    .ContinueWith(imageLoadResult =>
-                    {
-                        if (imageLoadResult.Result.IsSuccess)
-                            pageInfo.TotalSize += imageLoadResult.Result.Size;
-
-                        _settings.CrawlImageLoadedEvent?.Invoke(imageLoadResult.Result);
-                    });
-                
-                tasks.Add(loadImageTask);
-            }
-
-            await Task.WhenAll(tasks);
-            
-            stopwatch.Stop();
-            pageInfo.TotalLoadTime += stopwatch.ElapsedMilliseconds;
-        }
-
-        private void ScanAndApplyALinks(string hostUrl, PageInfo pageInfo)
-        {
-            
         }
     }
 }

@@ -26,19 +26,11 @@ namespace SiteEvaluator.ConsoleUI
         public async Task<int> ScanHostAsync(string hostUrl, bool logToConsole = false, bool includeNofollowLinks = false)
         {
             if (logToConsole) 
-                ConsoleX.WriteLine.Warning($"Start crawling: {hostUrl}\n\t↓↓↓");
+                ConsoleX.WriteLine.Warning($"Start crawling: {hostUrl}\n\t↓ ↓ ↓");
             
             IList<PageInfo> siteCrawlerResults = await _siteCrawler
-                .CrawlAsync(hostUrl, settings =>
-                {
-                    settings.IncludeNofollowLinks = includeNofollowLinks;
-                    settings.CrawlHtmlLoadedEvent = logToConsole 
-                        ? result => ConsoleX.WriteLine.Info($"Page: {result}")
-                        : null;
-                    settings.CrawlImageLoadedEvent = logToConsole
-                        ? result => ConsoleX.WriteLine.Comment($"\tImage: {result}")
-                        : null;
-                });
+                .CrawlAsync(hostUrl, settings => 
+                    GetCrawlerSettings(logToConsole, includeNofollowLinks, settings));
             
             if (logToConsole) 
                 ConsoleX.WriteLine.Success($"Crawling finished. Crawled: {siteCrawlerResults.Count} pages\n");
@@ -46,19 +38,11 @@ namespace SiteEvaluator.ConsoleUI
             await _reportService.AddCrawlerResultsAsync(hostUrl, siteCrawlerResults);
             
             if (logToConsole) 
-                ConsoleX.WriteLine.Warning($"Start sitemap.xml exploring: {hostUrl}\nLoad content...\n\t↓↓↓");
+                ConsoleX.WriteLine.Warning($"Start sitemap.xml exploring: {hostUrl}\nLoad content...\n\t↓ ↓ ↓");
             
             IList<PageInfo> siteMapExplorerResults = await _siteMapExplorer
-                .ExploreAsync(hostUrl, settings =>
-                {
-                    settings.LoadContent = true;
-                    settings.UrlsForExcludeLoadContent
-                        .AddRange(siteCrawlerResults
-                            .Select(result => result.Url));
-                    settings.ExploreHtmlLoadedEvent = logToConsole 
-                        ? result => ConsoleX.WriteLine.Comment(result.ToString())
-                        : null;
-                });
+                .ExploreAsync(hostUrl, settings => 
+                    GetSiteMapExplorerSettings(logToConsole, settings, siteCrawlerResults));
             
             if (logToConsole) 
                 ConsoleX.WriteLine.Success($"sitemap.xml explored. Founded: {siteMapExplorerResults.Count} links\n");
@@ -128,12 +112,44 @@ namespace SiteEvaluator.ConsoleUI
 
                 ConsoleX.Write.Info($"Url: {sbUrl}");
                 ConsoleX.Write.Info($"   Loading: {pageInfo.TotalLoadTime}ms");
-                ConsoleX.Write.Info($"   Size: {Math.Round((double)pageInfo.TotalSize / 1024, 2)}kb");
+                
+                ConsoleX.Write.Info(pageInfo.TotalSize < (1000 * 1024)
+                    ? $"   Size: {Math.Round((double)pageInfo.TotalSize / 1024, 2)}Kb"
+                    : $"   Size: {Math.Round((double)pageInfo.TotalSize / 1024 / 1024, 2)}Mb");
+                
                 // ConsoleX.Write.Info($"   Level: {pageInfo.Level}");
                 ConsoleX.Write.Info($"   Inner links: {pageInfo.InnerUrls.Count}");
                 ConsoleX.Write.Info($"   Outer links: {pageInfo.OuterUrls.Count}");
                 ConsoleX.WriteLine.Info($"   Images: {pageInfo.MediaUrls.Count}");
             }
         }
+        
+        private static void GetSiteMapExplorerSettings(bool logToConsole, ExploreSettings settings, IEnumerable<PageInfo> siteCrawlerResults)
+        {
+            settings.LoadContent = true;
+            settings.LoadMedia = true;
+            settings.UrlsForExcludeLoadContent
+                .AddRange(siteCrawlerResults
+                    .Select(result => result.Url));
+            settings.ExploreHtmlLoadedEvent = logToConsole
+                ? result => ConsoleX.WriteLine.Info($"Page: {result}")
+                : null;
+            settings.ExploreImageLoadedEvent = logToConsole
+                ? result => ConsoleX.WriteLine.Comment($"\tImage: {result}")
+                : null;
+        }
+
+        private static void GetCrawlerSettings(bool logToConsole, bool includeNofollowLinks, CrawlerSettings settings)
+        {
+            settings.IncludeNofollowLinks = includeNofollowLinks;
+            settings.CrawlHtmlLoadedEvent = logToConsole
+                ? result => ConsoleX.WriteLine.Info($"Page: {result}")
+                : null;
+            settings.LoadMedia = true;
+            settings.CrawlImageLoadedEvent = logToConsole
+                ? result => ConsoleX.WriteLine.Comment($"\tImage: {result}")
+                : null;
+        }
+
     }
 }

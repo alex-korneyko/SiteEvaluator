@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -15,15 +14,14 @@ namespace SiteEvaluator.DataLoader.HttpLoader
             _httpClient = httpClient;
         }
 
-        public async Task<HttpExtendedResponse> LoadAsync(string requestUri)
+        public async Task<HttpExtendedResponse> LoadAsync(Uri requestUri)
         {
             var stopwatch = new Stopwatch();
 
-            // Console.WriteLine($"Attempt ot load --> {requestUri}");
-            
             stopwatch.Start();
             var httpResponseMessage = await _httpClient.GetAsync(requestUri);
             stopwatch.Stop();
+            
             return new HttpExtendedResponse(httpResponseMessage, stopwatch.ElapsedMilliseconds);
         }
     }

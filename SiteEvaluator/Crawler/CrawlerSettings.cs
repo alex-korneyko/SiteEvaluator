@@ -8,5 +8,6 @@ namespace SiteEvaluator.Crawler
         public bool IncludeNofollowLinks { get; set; }
         public Action<StringLoadResult>? CrawlHtmlLoadedEvent { get; set; }
         public Action<ImageLoadResult>? CrawlImageLoadedEvent { get; set; }
+        public bool LoadMedia { get; set; }
     }
 }

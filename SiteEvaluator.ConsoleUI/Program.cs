@@ -7,7 +7,7 @@ using SiteEvaluator.DataLoader.HttpLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExploring;
-using SiteEvaluator.Xml;
+using SiteEvaluator.SiteMapExploring.Parser;
 
 namespace SiteEvaluator.ConsoleUI
 {
@@ -26,7 +26,7 @@ namespace SiteEvaluator.ConsoleUI
 
             //Services. Second layer
             ISiteCrawler siteCrawler = new SiteCrawler(contentLoaderService, htmlParseService);
-            ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(contentLoaderService, siteMapParseService);
+            ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(contentLoaderService, siteMapParseService, htmlParseService);
             IReportService reportService = new ReportService(dao);
 
             var application = new Application(siteMapExplorer, siteCrawler, reportService);
