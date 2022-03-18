@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Moq;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.DataLoader;
+using SiteEvaluator.DataLoader.HttpLoader;
+using SiteEvaluator.Html;
 using SiteEvaluator.SiteMapExploring;
-using SiteEvaluator.Xml;
+using SiteEvaluator.SiteMapExploring.Parser;
 using Xunit;
 
 namespace SiteEvaluator.Tests
@@ -15,41 +16,42 @@ namespace SiteEvaluator.Tests
     {
         [Theory]
         [ClassData(typeof(SitemapData))]
-        public async Task ExploreAsync_HostUrlString_ShouldReturnSiteMapExploreResult(string sitemapXmlString, bool urlSetIsNull)
+        public async Task ExploreAsync_HostUrlString_ShouldReturnPageInfos(string sitemapXmlString, bool urlSetIsNull)
         {
             const string hostUrl = "https://localhost";
             
-            var mockHttpContentLoader = new Mock<IHttpContentLoaderService>();
+            var mockHttpContentLoader = new Mock<IContentLoaderService>();
             mockHttpContentLoader
-                .Setup(loader => loader.LoadSiteMapAsync(hostUrl))
+                .Setup(loader => loader.LoadSiteMapAsync(new Uri(hostUrl)))
                 .Returns(Task.FromResult(GetContentLoadResult(hostUrl, sitemapXmlString)));
 
             var siteMapParseService = new SiteMapParseService();
+            var htmlParseService = new HtmlParseService();
 
-            var siteMapExplorer = new SiteMapExplorer(mockHttpContentLoader.Object, siteMapParseService);
+            var siteMapExplorer = new SiteMapExplorer(mockHttpContentLoader.Object, siteMapParseService, htmlParseService);
 
-            var siteMapExploreResult = await siteMapExplorer.ExploreAsync(hostUrl);
+            var pageInfos = await siteMapExplorer.ExploreAsync(hostUrl);
             
-            Assert.NotNull(siteMapExploreResult);
-            Assert.Equal(urlSetIsNull, siteMapExploreResult.Count == 0);
-            if (siteMapExploreResult.Count != 0)
+            Assert.NotNull(pageInfos);
+            Assert.Equal(urlSetIsNull, pageInfos.Count == 0);
+            if (pageInfos.Count != 0)
             {
-                Assert.Equal(2, siteMapExploreResult.Count);
-                Assert.Contains( new ContentLoadResult(SitemapData.Url1!.Loc!), siteMapExploreResult);
-                Assert.Contains(new ContentLoadResult(SitemapData.Url2!.Loc!), siteMapExploreResult);
+                Assert.Equal(2, pageInfos.Count);
+                Assert.Contains( new PageInfo(new StringLoadResult(SitemapData.Url1!.Loc!)), pageInfos);
+                Assert.Contains(new PageInfo(new StringLoadResult(SitemapData.Url2!.Loc!)), pageInfos);
             }
         }
 
-        private ContentLoadResult GetContentLoadResult(string hostUrl, string sitemapXmlString)
+        private StringLoadResult GetContentLoadResult(string hostUrl, string sitemapXmlString)
         {
-            var contentLoadResult = new ContentLoadResult(hostUrl);
+            var stringLoadResult = new StringLoadResult(hostUrl);
 
-            contentLoadResult.ApplyHttpResponseAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            stringLoadResult.ApplyHttpResponseAsync(new HttpExtendedResponse(new HttpResponseMessage(HttpStatusCode.OK), 100)
             {
                 Content = new StringContent(sitemapXmlString)
             });
 
-            return contentLoadResult;
+            return stringLoadResult;
         }
     }
 }

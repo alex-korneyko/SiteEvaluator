@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.DataLoader;
 using Xunit;
 
 namespace SiteEvaluator.Data.Tests
@@ -23,7 +23,7 @@ namespace SiteEvaluator.Data.Tests
         [InlineData("", ".crawler", "")]
         public void GetFileName_HostUrlAndSuffix_ShouldReturnString(string hostUrl, string suffix, string expected)
         {
-            var fileDao = new FileDao<ContentLoadResult>();
+            var fileDao = new FileDao<PageInfo>();
 
             var fileName = fileDao.GetFileName(hostUrl, suffix);
 
@@ -33,12 +33,12 @@ namespace SiteEvaluator.Data.Tests
         [Theory]
         [ClassData(typeof(ContentLoadResultsCollectionAndJsonStringsCollection))]
         public void ConvertToJsonStrings_ContentLoadResultsCollection_ExpectedJsonStringsCollection(
-            IEnumerable<ContentLoadResult> contentLoadResults,
+            IEnumerable<PageInfo> pages,
             IEnumerable<string> jsonSerializedResultsCollection)
         {
-            var fileDao = new FileDao<ContentLoadResult>();
+            var fileDao = new FileDao<PageInfo>();
 
-            var jsonSerializedResults = fileDao.ConvertToJsonStrings(contentLoadResults);
+            var jsonSerializedResults = fileDao.ConvertToJsonStrings(pages);
 
             Assert.Equal(jsonSerializedResultsCollection, jsonSerializedResults);
         }
@@ -46,10 +46,10 @@ namespace SiteEvaluator.Data.Tests
         [Theory]
         [ClassData(typeof(ContentLoadResultsCollectionAndJsonStringsCollection))]
         public void ConvertToContentLoadResults_JsonStringsCollection_ExpectedContentLoadResultsCollection(
-            IEnumerable<ContentLoadResult> contentLoadResults,
+            IEnumerable<PageInfo> contentLoadResults,
             IEnumerable<string> jsonSerializedResultsCollection)
         {
-            var fileDao = new FileDao<ContentLoadResult>();
+            var fileDao = new FileDao<PageInfo>();
 
             var toContentLoadResults = fileDao.ConvertToContentLoadResults(jsonSerializedResultsCollection);
 
@@ -59,11 +59,11 @@ namespace SiteEvaluator.Data.Tests
         [Theory]
         [ClassData(typeof(ContentLoadResultsCollectionAndJsonStringsCollection))]
         public async Task SaveToFileAsync_FileNameJsonStringsCollection_ExpectedSavedLinesCount(
-            IEnumerable<ContentLoadResult> contentLoadResults,
+            IEnumerable<PageInfo> contentLoadResults,
             IEnumerable<string> jsonSerializedResultsCollection)
         {
             const string fileName = "testFile.result";
-            var fileDao = new FileDao<ContentLoadResult>();
+            var fileDao = new FileDao<PageInfo>();
 
             var jsonResultsList = jsonSerializedResultsCollection.ToList();
 
@@ -84,7 +84,7 @@ namespace SiteEvaluator.Data.Tests
         {
             yield return new object[]
             {
-                new List<ContentLoadResult>
+                new List<PageInfo>
                 {
                     result1,
                     result2
@@ -102,24 +102,24 @@ namespace SiteEvaluator.Data.Tests
             return GetEnumerator();
         }
 
-        ContentLoadResult result1 => new("https://site.com")
+        PageInfo result1 => new (new StringLoadResult("https://site.com")
         {
             ContentType = "text/html",
             HttpStatusCode = HttpStatusCode.OK,
-            PageLoadTime = 100
-        };
+            ContentLoadTime = 100
+        });
 
-        ContentLoadResult result2 => new("https://site.com")
+        PageInfo result2 => new(new StringLoadResult("https://site.com")
         {
             ContentType = "text/html",
             HttpStatusCode = HttpStatusCode.NotFound,
-            PageLoadTime = 150
-        };
+            ContentLoadTime = 150
+        });
 
-        string ResultString1 => "{\"PageUrl\":\"https://site.com/\",\"Content\":\"\",\"HttpStatusCode\":200," +
-                                "\"ContentType\":\"text/html\",\"PageLoadTime\":100,\"Size\":0,\"IsSuccess\":true,\"Exception\":null}";
+        string ResultString1 => "{\"Url\":\"https://site.com\",\"Content\":\"\",\"InnerUrls\":[],\"OuterUrls\":[]," +
+                                "\"MediaUrls\":[],\"TotalLoadTime\":100,\"Level\":0,\"TotalSize\":0}";
 
-        string ResultString2 => "{\"PageUrl\":\"https://site.com/\",\"Content\":\"\",\"HttpStatusCode\":404," +
-                                "\"ContentType\":\"text/html\",\"PageLoadTime\":150,\"Size\":0,\"IsSuccess\":true,\"Exception\":null}";
+        string ResultString2 => "{\"Url\":\"https://site.com\",\"Content\":\"\",\"InnerUrls\":[],\"OuterUrls\":[]," +
+                                "\"MediaUrls\":[],\"TotalLoadTime\":150,\"Level\":0,\"TotalSize\":0}";
     }
 }
