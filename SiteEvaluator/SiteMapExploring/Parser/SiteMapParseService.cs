@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace SiteEvaluator.Xml
+namespace SiteEvaluator.SiteMapExploring.Parser
 {
     public class SiteMapParseService : ISiteMapParseService
     {
@@ -19,7 +19,7 @@ namespace SiteEvaluator.Xml
                 var deserialize = (SiteMap)xmlSerializer.Deserialize(stream)!;
                 return deserialize;
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
                 return new SiteMap();
             }

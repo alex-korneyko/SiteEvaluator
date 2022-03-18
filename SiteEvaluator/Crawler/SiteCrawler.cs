@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.Common;
+using SiteEvaluator.DataLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Nodes;
 
@@ -10,92 +12,83 @@ namespace SiteEvaluator.Crawler
 {
     public class SiteCrawler : ISiteCrawler
     {
-        private readonly IHttpContentLoaderService _httpContentLoaderService;
+        private readonly IContentLoaderService _contentLoaderService;
         private readonly IHtmlParseService _htmlParseService;
-        private readonly List<ContentLoadResult> _result = new();
+        private readonly List<PageInfo> _result = new();
         private readonly CrawlerSettings _settings = new();
 
-        public SiteCrawler(IHttpContentLoaderService httpContentLoaderService, IHtmlParseService htmlParseService)
+        public SiteCrawler(IContentLoaderService contentLoaderService, IHtmlParseService htmlParseService)
         {
-            _httpContentLoaderService = httpContentLoaderService;
+            _contentLoaderService = contentLoaderService;
             _htmlParseService = htmlParseService;
         }
 
-        public async Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null)
+        public async Task<IList<PageInfo>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null)
         {
             crawlerSettings?.Invoke(_settings);
 
-            hostUrl = hostUrl.EndsWith('/') ? hostUrl[..^1] : hostUrl;
+            var hostUri = new Uri(hostUrl);
 
-            ContentLoadResult pageLoadResult = await _httpContentLoaderService.LoadContentAsync(hostUrl);
+            StringLoadResult stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUri);
             
-            _result.Add(pageLoadResult);
-            _settings.CrawlEvent?.Invoke(pageLoadResult);
-
-            var pageBody = string.Empty;
-
-            if (pageLoadResult.HttpStatusCode == HttpStatusCode.OK)
+            var pageInfo = new PageInfo(stringLoadResult)
             {
-                pageBody = _htmlParseService.ExtractBodyNode(pageLoadResult.Content);
+                Level = 0
+            };
+
+            _result.Add(pageInfo);
+            _settings.CrawlHtmlLoadedEvent?.Invoke(stringLoadResult);
+
+            if (stringLoadResult.HttpStatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(pageInfo.Content))
+            {
+                await ScanLinksAsync(hostUri, pageInfo);
             }
-
-            await ScanLinksAsync(pageBody, hostUrl);
-
+            
             return _result;
         }
 
-        private async Task ScanLinksAsync(string pageBody, string hostUrl)
+        private async Task ScanLinksAsync(Uri hostUri, PageInfo pageInfo)
         {
-            var allTagFullStrings = _htmlParseService.GetNodesAsStringsList<A>(pageBody);
+            var allImgNodes = _htmlParseService.GetAllNodes<Img>(pageInfo.Content);
+            await _contentLoaderService.ScanAndApplyMediaLinks(pageInfo, allImgNodes, _settings.LoadMedia, _settings.CrawlImageLoadedEvent);
 
-            foreach (var tagFullString in allTagFullStrings)
+            var aNodes = _htmlParseService.GetAllNodes<A>(pageInfo.Content);
+
+            pageInfo.OuterUrls = Utils.FilterOuterLinksNodes(aNodes, hostUri)
+                .Select(aNode => aNode.Href)
+                .Where(url => url != null)
+                .ToList()!;
+
+            var innerUrlANodes = Utils.FilterInnerLinkNodes(aNodes, hostUri);
+
+            foreach (var aNode in innerUrlANodes)
             {
-                var aLinkTag = _htmlParseService.DeserializeToNode<A>(tagFullString);
-
-                if (aLinkTag == null)
+                if (!_settings.IncludeNofollowLinks && aNode.Rel == "nofollow")
                     continue;
 
-                var fullUrl = GetFullUrl(aLinkTag, hostUrl);
+                var currentNodeFullUri = new Uri(hostUri, aNode.Href);
 
-                if (string.IsNullOrEmpty(fullUrl) || _result.Contains(new ContentLoadResult(fullUrl)))
+                if (!hostUri.AbsoluteUri.Equals(currentNodeFullUri.AbsoluteUri))
+                    pageInfo.InnerUrls.Add(currentNodeFullUri.AbsolutePath);
+
+                var alreadyCrawledPage = _result.FirstOrDefault(page => page.Url.Equals(currentNodeFullUri.AbsoluteUri));
+                if (alreadyCrawledPage != null)
                     continue;
 
-                if (!_settings.IncludeNofollowLinks && aLinkTag.Rel == "nofollow")
+                var htmlLoadResult = await _contentLoaderService.LoadHtmlAsync(currentNodeFullUri);
+                if (htmlLoadResult.HttpStatusCode != HttpStatusCode.OK || !htmlLoadResult.ContentType.Contains("text/html"))
+                    continue;
+                
+                var newPageInfo = new PageInfo(htmlLoadResult, ++pageInfo.Level);
+
+                _result.Add(newPageInfo);
+                _settings.CrawlHtmlLoadedEvent?.Invoke(htmlLoadResult);
+
+                if (!htmlLoadResult.IsSuccess)
                     continue;
 
-                var pageLoadResult = await _httpContentLoaderService.LoadContentAsync(fullUrl);
-
-                _result.Add(pageLoadResult);
-                _settings.CrawlEvent?.Invoke(pageLoadResult);
-
-                if (!pageLoadResult.IsSuccess)
-                    continue;
-
-                await ScanLinksAsync(pageLoadResult.Content, hostUrl);
+                await ScanLinksAsync(hostUri, newPageInfo);
             }
-        }
-
-        private string GetFullUrl(A aTag, string hostUrl)
-        {
-            if (aTag.Href != null)
-            {
-                aTag.Href = aTag.Href.EndsWith('/') ? aTag.Href : aTag.Href + "/";
-
-                if (aTag.Href.StartsWith(hostUrl))
-                {
-                    return aTag.Href;
-                }
-            }
-
-            if (aTag.Href == null 
-                || aTag.Href.StartsWith("http") 
-                || !aTag.Href.StartsWith('/')
-                || aTag.Href is "#" or "\\")
-            {
-                return "";
-            }
-
-            return hostUrl + aTag.Href;
         }
     }
 }

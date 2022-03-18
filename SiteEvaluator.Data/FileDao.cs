@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SiteEvaluator.Data
 {
-    public class FileDao<T> : IDao<T> where T : IHasContent
+    public class FileDao<T> : IDao<T> where T : class, IHasContent
     {
         private const string FileNameCrawlerSuffix = ".crawler";
         private const string FileNameSiteMapSuffix = ".sitemap";
@@ -87,7 +87,9 @@ namespace SiteEvaluator.Data
             foreach (var contentLoadResult in contentLoadResults)
             {
                 contentLoadResult.ClearContent();
+                
                 var serializedResult = JsonSerializer.Serialize(contentLoadResult);
+                
                 jsonDataSet.Add(serializedResult);
             }
 
@@ -100,10 +102,19 @@ namespace SiteEvaluator.Data
 
             foreach (var jsonString in jsonStringsCollection)
             {
-                var contentLoadResult = JsonSerializer.Deserialize<T>(jsonString);
-                
-                if (contentLoadResult != null) 
-                    contentLoadResults.Add(contentLoadResult);
+
+                try
+                {
+                    var contentLoadResult = JsonSerializer.Deserialize<T>(jsonString);
+                    if (contentLoadResult != null) 
+                        contentLoadResults.Add(contentLoadResult);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(jsonString);
+                    Console.WriteLine(e);
+                    throw;
+                }
             }
 
             return contentLoadResults;

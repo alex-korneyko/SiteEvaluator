@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SiteEvaluator.ContentLoader;
+using SiteEvaluator.DataLoader;
 
 namespace SiteEvaluator.Crawler
 {
     public interface ISiteCrawler
     {
-        Task<IList<ContentLoadResult>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null);
+        Task<IList<PageInfo>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null);
     }
 }

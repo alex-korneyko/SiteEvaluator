@@ -6,7 +6,7 @@ namespace SiteEvaluator.Html.Nodes
 
         public string OpenNodeTag => "<" + Name;
 
-        public string CloseNodeTag => "</" + Name + ">";
+        public virtual string CloseNodeTag => ">";
 
         [HtmlNodeAttribute] 
         public string? Id { get; set; }

@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace SiteEvaluator.Xml
+namespace SiteEvaluator.SiteMapExploring.Parser
 {
     [XmlRoot("urlset")]
     public class SiteMap

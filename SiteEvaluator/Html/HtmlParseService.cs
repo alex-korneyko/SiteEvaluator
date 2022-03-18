@@ -31,6 +31,22 @@ namespace SiteEvaluator.Html
             return listEachNodeFullStrings;
         }
 
+        public List<T> GetAllNodes<T>(string rawHtml) where T : HtmlNode, new()
+        {
+            var htmlNodes = new List<T>();
+            var nodesAsStringsList = GetNodesAsStringsList<T>(rawHtml);
+            
+            foreach (var nodeAsString in nodesAsStringsList)
+            {
+                var deserializeToNode = DeserializeToNode<T>(nodeAsString);
+                
+                if (deserializeToNode != null)
+                    htmlNodes.Add(deserializeToNode);
+            }
+
+            return htmlNodes;
+        }
+
         public string ExtractBodyNode(string rawHtml)
         {
             var allTagStrings = GetNodesAsStringsList<Body>(rawHtml);

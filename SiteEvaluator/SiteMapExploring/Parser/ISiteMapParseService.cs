@@ -1,4 +1,4 @@
-namespace SiteEvaluator.Xml
+namespace SiteEvaluator.SiteMapExploring.Parser
 {
     public interface ISiteMapParseService
     {
