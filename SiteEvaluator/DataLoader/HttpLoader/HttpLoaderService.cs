@@ -7,11 +7,11 @@ namespace SiteEvaluator.DataLoader.HttpLoader
 {
     public class HttpLoaderService : IHttpLoaderService
     {
-        private readonly HttpClient _httpClient;
+        private HttpClient _httpClient;
 
-        public HttpLoaderService(HttpClient httpClient)
+        public HttpLoaderService()
         {
-            _httpClient = httpClient;
+            _httpClient = new HttpClient();
         }
 
         public async Task<HttpExtendedResponse> LoadAsync(Uri requestUri)
@@ -23,6 +23,11 @@ namespace SiteEvaluator.DataLoader.HttpLoader
             stopwatch.Stop();
             
             return new HttpExtendedResponse(httpResponseMessage, stopwatch.ElapsedMilliseconds);
+        }
+
+        public void SetHttpMessageHandler(HttpMessageHandler httpMessageHandler)
+        {
+            _httpClient = new HttpClient(httpMessageHandler);
         }
     }
 }
