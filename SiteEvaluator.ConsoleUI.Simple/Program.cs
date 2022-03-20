@@ -8,7 +8,7 @@ using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExploring;
 using SiteEvaluator.SiteMapExploring.Parser;
 
-namespace SiteEvaluator.ConsoleUI
+namespace SiteEvaluator.ConsoleUI.Simple
 {
     class Program
     {
@@ -28,9 +28,15 @@ namespace SiteEvaluator.ConsoleUI
             ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(contentLoaderService, siteMapParseService, htmlParseService);
             IReportService reportService = new ReportService(dao);
 
-            var application = new Application(siteMapExplorer, siteCrawler, reportService);
+            var applicationBuilder = ConsoleApplication.CreateBuilder(args);
             
-            await application.StartAsync(args);
+            IConsoleView consoleView = new ConsoleView(reportService, siteCrawler, siteMapExplorer);
+            
+            applicationBuilder.SetBootstrap(consoleView);
+            
+            var application = applicationBuilder.Build();
+
+            await application.StartAsync();
         }
     }
 }

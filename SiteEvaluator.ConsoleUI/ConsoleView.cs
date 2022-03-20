@@ -10,7 +10,7 @@ using SiteEvaluator.SiteMapExploring;
 
 namespace SiteEvaluator.ConsoleUI
 {
-    public class ConsoleView
+    public class ConsoleView : IConsoleView
     {
         private readonly IReportService _reportService;
         private readonly ISiteCrawler _siteCrawler;
