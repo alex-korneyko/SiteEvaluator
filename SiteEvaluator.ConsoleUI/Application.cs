@@ -1,23 +1,22 @@
 ﻿using System.Threading.Tasks;
 using SiteEvaluator.ConsoleUI.ConsoleXtend;
-using SiteEvaluator.Crawler;
-using SiteEvaluator.Presentation;
-using SiteEvaluator.SiteMapExploring;
 
 namespace SiteEvaluator.ConsoleUI
 {
     public class Application
     {
-        private readonly ConsoleView _consoleView;
+        private readonly IConsoleView _consoleView;
+        private readonly string[] _args;
 
-        public Application(ISiteMapExplorer siteMapExplorer, ISiteCrawler siteCrawler, IReportService reportService)
+        public Application(IConsoleView consoleView, params string[] args)
         {
-            _consoleView = new ConsoleView(reportService, siteCrawler, siteMapExplorer);
+            _consoleView = consoleView;
+            _args = args;
         }
 
-        public async Task StartAsync(params string[] args)
+        public async Task StartAsync()
         {
-            var hostUrl = GetHostUrl(args);
+            var hostUrl = GetHostUrl(_args);
             
             await _consoleView.ScanHostAsync(hostUrl, true);
 
@@ -29,7 +28,7 @@ namespace SiteEvaluator.ConsoleUI
 
             ConsoleX.ReadLine.Note("Job completed. Press ENTER for exit...");
         }
-
+        
         private static string GetHostUrl(string[] args)
         {
             var hostUrl = args.Length == 0
