@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using SiteEvaluator.Crawler;
 using SiteEvaluator.Data;
 using SiteEvaluator.DataLoader;
@@ -16,7 +15,7 @@ namespace SiteEvaluator.ConsoleUI
         static async Task Main(string[] args)
         {
             //Services. Zero layer
-            IHttpLoaderService httpLoaderService = new HttpLoaderService(new HttpClient());
+            IHttpLoaderService httpLoaderService = new HttpLoaderService();
             
             //Services. First layer
             IContentLoaderService contentLoaderService = new ContentLoaderService(httpLoaderService);
