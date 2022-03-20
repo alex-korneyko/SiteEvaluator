@@ -8,7 +8,7 @@ namespace SiteEvaluator.ConsoleUI
         private readonly IConsoleView _consoleView;
         private readonly string[] _args;
 
-        public Application(IConsoleView consoleView, params string[] args)
+        internal Application(IConsoleView consoleView, params string[] args)
         {
             _consoleView = consoleView;
             _args = args;
