@@ -27,7 +27,8 @@ namespace SiteEvaluator.Tests
                 .Setup(targetUrl)
                 .Returns(content);
             
-            var httpContentLoader = new HttpLoaderService(new HttpClient(mockHttpMessageHandler));
+            var httpContentLoader = new HttpLoaderService();
+            httpContentLoader.SetHttpMessageHandler(mockHttpMessageHandler);
 
             var httpExtendedResponse = await httpContentLoader.LoadAsync(new Uri(requestUrl));
             
@@ -41,7 +42,8 @@ namespace SiteEvaluator.Tests
             var mockHttpMessageHandler = new MockHttpMessageHandler();
             mockHttpMessageHandler.Setup("aaa.aa");
 
-            var httpContentLoader = new HttpLoaderService(new HttpClient(mockHttpMessageHandler));
+            var httpContentLoader = new HttpLoaderService();
+            httpContentLoader.SetHttpMessageHandler(mockHttpMessageHandler);
 
             await Assert.ThrowsAsync<UriFormatException>(() => httpContentLoader.LoadAsync(new Uri("aaa.aa")));
         }
@@ -52,7 +54,8 @@ namespace SiteEvaluator.Tests
             var mockHttpMessageHandler = new MockHttpMessageHandler();
             mockHttpMessageHandler.Setup("htt://aaa.aa");
 
-            var httpContentLoader = new HttpLoaderService(new HttpClient(mockHttpMessageHandler));
+            var httpContentLoader = new HttpLoaderService();
+            httpContentLoader.SetHttpMessageHandler(mockHttpMessageHandler);
 
             await Assert.ThrowsAsync<ArgumentException>(() => httpContentLoader.LoadAsync(new Uri("htt://aaa.aa")));
         }
