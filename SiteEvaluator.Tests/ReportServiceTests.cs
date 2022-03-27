@@ -1,7 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using SiteEvaluator.ContentLoader;
+using System.Threading.Tasks;
+using Moq;
+using SiteEvaluator.Data;
+using SiteEvaluator.DataLoader;
 using SiteEvaluator.Presentation;
 using Xunit;
 
@@ -11,27 +14,76 @@ namespace SiteEvaluator.Tests
     {
         [Theory]
         [ClassData(typeof(ReportData))]
-        public void AllMethodsInOneTest(
-            IEnumerable<ContentLoadResult> crawlerResults,
-            IEnumerable<ContentLoadResult> siteMapResults,
-            IEnumerable<ContentLoadResult> expectedOnlyInCrawlerButNotInSiteMap,
-            IEnumerable<ContentLoadResult> expectedOnlyInSiteMapButNotInCrawler,
-            IEnumerable<ContentLoadResult> compositeResult)
+        public async Task AllMethodsInOneTest(
+            IList<PageInfo> crawlerResults,
+            IList<PageInfo> siteMapResults,
+            IList<PageInfo> expectedOnlyInCrawlerButNotInSiteMap,
+            IList<PageInfo> expectedOnlyInSiteMapButNotInCrawler,
+            IList<PageInfo> expectedCompositeResult)
         {
-            // IReportService reportService = new ReportService();
-            // reportService.AddCrawlerResultsAsync(crawlerResults);
-            // reportService.AddSiteMapExplorerResultsAsync(siteMapResults);
-            //
-            // var onlyInCrawlerResults = reportService.GetUniqCrawlerResults().ToList();
-            // var onlyInSiteMapResults = reportService.GetUniqInSiteMapResults().ToList();
-            //
-            // var compositeReport = reportService.GetCompositeReportAsync().ToList();
-            //
-            // Assert.Empty(onlyInCrawlerResults.Except(expectedOnlyInCrawlerButNotInSiteMap));
-            //
-            // Assert.Empty(onlyInSiteMapResults.Except(expectedOnlyInSiteMapButNotInCrawler));
-            //
-            // Assert.Empty(compositeResult.Except(compositeReport));
+            var mockDao = new Mock<IDao<PageInfo>>();
+            
+            mockDao.Setup(dao => dao.GetCrawlerResultsData("https://site.com"))
+                .ReturnsAsync(crawlerResults);
+            mockDao.Setup(dao => dao.GetSiteMapResultsData("https://site.com"))
+                .ReturnsAsync(siteMapResults);
+
+            IReportService reportService = new ReportService(mockDao.Object);
+
+            var onlyInCrawlerResults = 
+                (await reportService.GetUniqCrawlerResults("https://site.com"))
+                .ToList();
+            
+            var onlyInSiteMapResults = 
+                (await reportService.GetUniqInSiteMapResults("https://site.com"))
+                .ToList();
+            
+            var compositeReport = 
+                (await reportService.GetCompositeReportAsync("https://site.com"))
+                .ToList();
+            
+            Assert.Equal(expectedOnlyInCrawlerButNotInSiteMap, onlyInCrawlerResults);
+            Assert.Equal(expectedOnlyInSiteMapButNotInCrawler, onlyInSiteMapResults);
+            Assert.Equal(expectedCompositeResult, compositeReport);
+            mockDao.Verify(dao => dao.GetCrawlerResultsData("https://site.com"), Times.Exactly(3));
+        }
+        
+        [Theory]
+        [ClassData(typeof(ReportData))]
+        public async Task AddCrawlerResultsAsync_HostUrl_ExpectedInvokeSaveCrawlerResultsDataAsync(
+            IList<PageInfo> crawlerResults,
+            IList<PageInfo> siteMapResults,
+            IList<PageInfo> expectedOnlyInCrawlerButNotInSiteMap,
+            IList<PageInfo> expectedOnlyInSiteMapButNotInCrawler,
+            IList<PageInfo> compositeResult)
+        {
+            var mockDao = new Mock<IDao<PageInfo>>();
+            IReportService reportService = new ReportService(mockDao.Object);
+            mockDao.Setup(dao => dao.SaveCrawlerResultsDataAsync("https://site.com", crawlerResults))
+                .ReturnsAsync(crawlerResults.Count);
+            
+            await reportService.AddCrawlerResultsAsync("https://site.com", crawlerResults);
+            
+            mockDao.Verify(dao => dao.SaveCrawlerResultsDataAsync("https://site.com", crawlerResults), () => Times.Exactly(1));
+        }
+        
+        [Theory]
+        [ClassData(typeof(ReportData))]
+        public async Task AddSiteMapExplorerResultsAsync_HostUrl_ExpectedSaveSiteMapResultsDataAsync(
+            IList<PageInfo> crawlerResults,
+            IList<PageInfo> siteMapResults,
+            IList<PageInfo> expectedOnlyInCrawlerButNotInSiteMap,
+            IList<PageInfo> expectedOnlyInSiteMapButNotInCrawler,
+            IList<PageInfo> compositeResult)
+        {
+            var mockDao = new Mock<IDao<PageInfo>>();
+            IReportService reportService = new ReportService(mockDao.Object);
+            mockDao.Setup(dao => dao.SaveSiteMapResultsDataAsync("https://site.com", siteMapResults))
+                .ReturnsAsync(siteMapResults.Count);
+            
+            await reportService.AddSiteMapExplorerResultsAsync("https://site.com", siteMapResults);
+            
+            mockDao.Verify(dao => dao.SaveSiteMapResultsDataAsync("https://site.com", siteMapResults), () => Times.Exactly(1));
         }
     }
 
@@ -51,17 +103,17 @@ namespace SiteEvaluator.Tests
             yield return new object[]
             {
                 CrawlerResults,
-                new List<ContentLoadResult>(),
+                new List<PageInfo>(),
                 CrawlerResults,
-                new List<ContentLoadResult>(),
+                new List<PageInfo>(),
                 CrawlerResults
             };
             
             yield return new object[]
             {
-                new List<ContentLoadResult>(),
+                new List<PageInfo>(),
                 CrawlerResults,
-                new List<ContentLoadResult>(),
+                new List<PageInfo>(),
                 CrawlerResults,
                 CrawlerResults
             };
@@ -72,53 +124,53 @@ namespace SiteEvaluator.Tests
             return GetEnumerator();
         }
 
-        private IEnumerable<ContentLoadResult> CrawlerResults =>
-            new List<ContentLoadResult>
+        private IEnumerable<PageInfo> CrawlerResults =>
+            new List<PageInfo>
             {
-                new("link1"),
-                new("link2"),
-                new("link3"),
-                new("link4"),
-                new("link6"),
-                new("link7")
+                new(new StringLoadResult("link1")),
+                new(new StringLoadResult("link2")),
+                new(new StringLoadResult("link3")),
+                new(new StringLoadResult("link4")),
+                new(new StringLoadResult("link6")),
+                new(new StringLoadResult("link7"))
             };
 
-        private IEnumerable<ContentLoadResult> OnlyInCrawlerButNotInSiteMap =>
-            new List<ContentLoadResult>
+        private IEnumerable<PageInfo> OnlyInCrawlerButNotInSiteMap =>
+            new List<PageInfo>
             {
-                new("link6"),
-                new("link7")
+                new(new StringLoadResult("link6")),
+                new(new StringLoadResult("link7"))
             };
 
-        private IEnumerable<ContentLoadResult> SiteMapResults =>
-            new List<ContentLoadResult>
+        private IEnumerable<PageInfo> SiteMapResults =>
+            new List<PageInfo>
             {
-                new("link1"),
-                new("link2"),
-                new("link3"),
-                new("link4"),
-                new("link8"),
-                new("link9")
+                new(new StringLoadResult("link1")),
+                new(new StringLoadResult("link2")),
+                new(new StringLoadResult("link3")),
+                new(new StringLoadResult("link4")),
+                new(new StringLoadResult("link8")),
+                new(new StringLoadResult("link9"))
             };
         
-        private IEnumerable<ContentLoadResult> OnlyInSiteMapButNotInCrawler =>
-            new List<ContentLoadResult>
+        private IEnumerable<PageInfo> OnlyInSiteMapButNotInCrawler =>
+            new List<PageInfo>
             {
-                new("link8"),
-                new("link9")
+                new(new StringLoadResult("link8")),
+                new(new StringLoadResult("link9"))
             };
         
-        private IEnumerable<ContentLoadResult> CompositeResult => 
-            new List<ContentLoadResult>
+        private IEnumerable<PageInfo> CompositeResult => 
+            new List<PageInfo>
             {
-                new("link1"),
-                new("link2"),
-                new("link3"),
-                new("link4"),
-                new("link6"),
-                new("link7"),
-                new("link8"),
-                new("link9")
+                new(new StringLoadResult("link1")),
+                new(new StringLoadResult("link2")),
+                new(new StringLoadResult("link3")),
+                new(new StringLoadResult("link4")),
+                new(new StringLoadResult("link6")),
+                new(new StringLoadResult("link7")),
+                new(new StringLoadResult("link8")),
+                new(new StringLoadResult("link9"))
             };
     }
 }

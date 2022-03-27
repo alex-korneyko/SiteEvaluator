@@ -1,4 +1,4 @@
-﻿using SiteEvaluator.Xml;
+﻿using SiteEvaluator.SiteMapExploring.Parser;
 using Xunit;
 
 namespace SiteEvaluator.Tests

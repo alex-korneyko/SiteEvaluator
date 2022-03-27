@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using SiteEvaluator.Xml;
+using SiteEvaluator.SiteMapExploring.Parser;
 
 namespace SiteEvaluator.Tests
 {
@@ -37,14 +37,14 @@ namespace SiteEvaluator.Tests
         {
             Loc = "http://www.site.com/",
             LastMod = DateTime.Parse("2022-01-19T16:03:22+01:00"),
-            Changefreq = "monthly",
+            ChangeFreq = "monthly",
             Priority = 1.0f
         };
         public static Url Url2 => new()
         {
             Loc = "http://www.site.com/page-1.html",
             LastMod = DateTime.Parse("2022-01-19"),
-            Changefreq = "monthly",
+            ChangeFreq = "monthly",
             Priority = 0.8f
         };
     }

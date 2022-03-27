@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.Nin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.Autofac", "SiteEvaluator.ConsoleUI.Autofac\SiteEvaluator.ConsoleUI.Autofac.csproj", "{C2F3346F-E22E-4EF5-A871-4875A1DF9ECB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.Tests", "SiteEvaluator.ConsoleUI.Tests\SiteEvaluator.ConsoleUI.Tests.csproj", "{8D69EF62-4029-4132-AC1C-E9535955F00D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{C2F3346F-E22E-4EF5-A871-4875A1DF9ECB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2F3346F-E22E-4EF5-A871-4875A1DF9ECB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2F3346F-E22E-4EF5-A871-4875A1DF9ECB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D69EF62-4029-4132-AC1C-E9535955F00D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D69EF62-4029-4132-AC1C-E9535955F00D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D69EF62-4029-4132-AC1C-E9535955F00D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D69EF62-4029-4132-AC1C-E9535955F00D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D8424124-8930-4C55-A60E-19026DDBC530} = {E0BCE084-4438-4680-956A-7DE9CFE1211F}
@@ -73,5 +79,6 @@ Global
 		{4634E34E-C0EC-4469-A6CF-6B868417C790} = {E3723A92-7DE5-4F46-BD8F-7EA9B50C773B}
 		{C6151465-AE3F-4071-AE12-D11BB63FA40B} = {E3723A92-7DE5-4F46-BD8F-7EA9B50C773B}
 		{C2F3346F-E22E-4EF5-A871-4875A1DF9ECB} = {E3723A92-7DE5-4F46-BD8F-7EA9B50C773B}
+		{8D69EF62-4029-4132-AC1C-E9535955F00D} = {E0BCE084-4438-4680-956A-7DE9CFE1211F}
 	EndGlobalSection
 EndGlobal
