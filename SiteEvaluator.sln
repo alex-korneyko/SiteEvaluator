@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.Aut
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.Tests", "SiteEvaluator.ConsoleUI.Tests\SiteEvaluator.ConsoleUI.Tests.csproj", "{8D69EF62-4029-4132-AC1C-E9535955F00D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.MsHosting", "SiteEvaluator.ConsoleUI.MsHosting\SiteEvaluator.ConsoleUI.MsHosting.csproj", "{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{8D69EF62-4029-4132-AC1C-E9535955F00D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D69EF62-4029-4132-AC1C-E9535955F00D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D69EF62-4029-4132-AC1C-E9535955F00D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D8424124-8930-4C55-A60E-19026DDBC530} = {E0BCE084-4438-4680-956A-7DE9CFE1211F}
@@ -80,5 +86,6 @@ Global
 		{C6151465-AE3F-4071-AE12-D11BB63FA40B} = {E3723A92-7DE5-4F46-BD8F-7EA9B50C773B}
 		{C2F3346F-E22E-4EF5-A871-4875A1DF9ECB} = {E3723A92-7DE5-4F46-BD8F-7EA9B50C773B}
 		{8D69EF62-4029-4132-AC1C-E9535955F00D} = {E0BCE084-4438-4680-956A-7DE9CFE1211F}
+		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2} = {E3723A92-7DE5-4F46-BD8F-7EA9B50C773B}
 	EndGlobalSection
 EndGlobal
