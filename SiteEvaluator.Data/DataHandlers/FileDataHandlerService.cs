@@ -5,10 +5,12 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using SiteEvaluator.Data.Model;
 
-namespace SiteEvaluator.Data
+namespace SiteEvaluator.Data.DataHandlers
 {
-    public class FileDao<T> : IDao<T> where T : class, IHasContent
+    public class FileDataHandlerService<T> : IDataHandlerService<T> where
+        T : class, IHasContent, IEntity
     {
         private const string FileNameCrawlerSuffix = ".crawler";
         private const string FileNameSiteMapSuffix = ".sitemap";

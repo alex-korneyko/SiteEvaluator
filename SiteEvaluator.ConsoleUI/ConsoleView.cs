@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SiteEvaluator.ConsoleUI.ConsoleXtend;
 using SiteEvaluator.Crawler;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.Presentation;
 using SiteEvaluator.SiteMapExploring;
 
@@ -118,9 +119,9 @@ namespace SiteEvaluator.ConsoleUI
                     : $"   Size: {Math.Round((double)pageInfo.TotalSize / 1024 / 1024, 2)}Mb");
                 
                 // ConsoleX.Write.Info($"   Level: {pageInfo.Level}");
-                ConsoleX.Write.Info($"   Inner links: {pageInfo.InnerUrls.Count}");
-                ConsoleX.Write.Info($"   Outer links: {pageInfo.OuterUrls.Count}");
-                ConsoleX.WriteLine.Info($"   Images: {pageInfo.MediaUrls.Count}");
+                ConsoleX.Write.Info($"   Inner links: {pageInfo.PageInfoUrls.Count(url => url.PageInfoUrlType == PageInfoUrlType.Inner)}");
+                ConsoleX.Write.Info($"   Outer links: {pageInfo.PageInfoUrls.Count(url => url.PageInfoUrlType == PageInfoUrlType.Outer)}");
+                ConsoleX.WriteLine.Info($"   Images: {pageInfo.PageInfoUrls.Count(url => url.PageInfoUrlType == PageInfoUrlType.Media)}");
             }
         }
         

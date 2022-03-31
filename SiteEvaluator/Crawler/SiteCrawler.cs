@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SiteEvaluator.Common;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Nodes;
@@ -31,7 +32,7 @@ namespace SiteEvaluator.Crawler
 
             StringLoadResult stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUri);
             
-            var pageInfo = new PageInfo(stringLoadResult)
+            var pageInfo = new PageInfo(stringLoadResult, hostUri.Host, ScannerType.SiteCrawler)
             {
                 Level = 0
             };
@@ -54,10 +55,10 @@ namespace SiteEvaluator.Crawler
 
             var aNodes = _htmlParseService.GetAllNodes<A>(pageInfo.Content);
 
-            pageInfo.OuterUrls = Utils.FilterOuterLinksNodes(aNodes, hostUri)
-                .Select(aNode => aNode.Href)
-                .Where(url => url != null)
-                .ToList()!;
+            pageInfo.PageInfoUrls.AddRange(Utils.FilterOuterLinksNodes(aNodes, hostUri)
+                .Select(aNode => new PageInfoUrl(aNode.Href, PageInfoUrlType.Outer))
+                .Where(url => url.Url != null)
+                .ToList());
 
             var innerUrlANodes = Utils.FilterInnerLinkNodes(aNodes, hostUri);
 
@@ -69,7 +70,7 @@ namespace SiteEvaluator.Crawler
                 var currentNodeFullUri = new Uri(hostUri, aNode.Href);
 
                 if (!hostUri.AbsoluteUri.Equals(currentNodeFullUri.AbsoluteUri))
-                    pageInfo.InnerUrls.Add(currentNodeFullUri.AbsolutePath);
+                    pageInfo.PageInfoUrls.Add(new PageInfoUrl(currentNodeFullUri.AbsolutePath, PageInfoUrlType.Inner));
 
                 var alreadyCrawledPage = _result.FirstOrDefault(page => page.Url.Equals(currentNodeFullUri.AbsoluteUri));
                 if (alreadyCrawledPage != null)
@@ -79,7 +80,7 @@ namespace SiteEvaluator.Crawler
                 if (htmlLoadResult.HttpStatusCode != HttpStatusCode.OK || !htmlLoadResult.ContentType.Contains("text/html"))
                     continue;
                 
-                var newPageInfo = new PageInfo(htmlLoadResult, ++pageInfo.Level);
+                var newPageInfo = new PageInfo(htmlLoadResult, hostUri.Host, ScannerType.SiteCrawler, ++pageInfo.Level);
 
                 _result.Add(newPageInfo);
                 _settings.CrawlHtmlLoadedEvent?.Invoke(htmlLoadResult);

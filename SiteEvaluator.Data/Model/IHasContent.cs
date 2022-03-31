@@ -1,4 +1,4 @@
-﻿namespace SiteEvaluator.Data
+﻿namespace SiteEvaluator.Data.Model
 {
     public interface IHasContent
     {

@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using SiteEvaluator.Data;
-using SiteEvaluator.DataLoader;
 
-namespace SiteEvaluator
+namespace SiteEvaluator.Data.Model
 {
-    public class PageInfo: IEquatable<PageInfo>, IComparable<PageInfo>, IHasContent
+    public class PageInfo: IEquatable<PageInfo>, IComparable<PageInfo>, IHasContent, IEntity
     {
+        public int Id { get; set; }
+        public string SourceHost { get; set; }
+        public ScannerType ScannerType { get; set; }
         public string Url { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
-        public IList<string> InnerUrls { get; set; } = new List<string>();
-        public IList<string> OuterUrls { get; set; } = new List<string>();
-        public IList<string> MediaUrls { get; set; } = new List<string>();
+        public List<PageInfoUrl> PageInfoUrls { get; set; } = new();
         public long TotalLoadTime { get; set; }
         public int Level { get; set; }
         public long TotalSize { get; set; }
@@ -20,12 +19,14 @@ namespace SiteEvaluator
         {
         }
 
-        public PageInfo(StringLoadResult stringLoadResult, int level = 0)
+        public PageInfo(IPageInfoLoadResult pageInfoLoadResult, string sourceHost, ScannerType scannerType, int level = 0)
         {
-            Url = stringLoadResult.RequestedUrl;
-            Content = stringLoadResult.Content ?? string.Empty;
-            TotalLoadTime = stringLoadResult.ContentLoadTime;
-            TotalSize = stringLoadResult.Size;
+            SourceHost = sourceHost;
+            ScannerType = scannerType;
+            Url = pageInfoLoadResult.RequestedUrl;
+            Content = pageInfoLoadResult.Content ?? string.Empty;
+            TotalLoadTime = pageInfoLoadResult.ContentLoadTime;
+            TotalSize = pageInfoLoadResult.Size;
             Level = level;
         }
         

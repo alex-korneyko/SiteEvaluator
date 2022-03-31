@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using SiteEvaluator.Data.Model;
 
-namespace SiteEvaluator.Data
+namespace SiteEvaluator.Data.DataHandlers
 {
-    public interface IDao<T>
+    public interface IDataHandlerService<T> where T : IEntity
     {
         Task<IEnumerable<T>> GetCrawlerResultsData(string hostUrl);
         Task<IEnumerable<T>> GetSiteMapResultsData(string hostUrl);

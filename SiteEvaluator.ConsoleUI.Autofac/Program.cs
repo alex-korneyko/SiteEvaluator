@@ -2,6 +2,8 @@
 using Autofac;
 using SiteEvaluator.Crawler;
 using SiteEvaluator.Data;
+using SiteEvaluator.Data.DataHandlers;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.DataLoader.HttpLoader;
 using SiteEvaluator.Html;
@@ -35,7 +37,7 @@ namespace SiteEvaluator.ConsoleUI.Autofac
             containerBuilder.RegisterType<ContentLoaderService>().As<IContentLoaderService>().SingleInstance();
             containerBuilder.RegisterType<HtmlParseService>().As<IHtmlParseService>().SingleInstance();
             containerBuilder.RegisterType<SiteMapParseService>().As<ISiteMapParseService>().SingleInstance();
-            containerBuilder.RegisterType<FileDao<PageInfo>>().As<IDao<PageInfo>>().SingleInstance();
+            containerBuilder.RegisterType<FileDataHandlerService<PageInfo>>().As<IDataHandlerService<PageInfo>>().SingleInstance();
             
             //Services. Second layer
             containerBuilder.RegisterType<SiteCrawler>().As<ISiteCrawler>().SingleInstance();

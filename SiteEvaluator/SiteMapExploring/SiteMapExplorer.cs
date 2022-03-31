@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SiteEvaluator.Common;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.Html;
 using SiteEvaluator.Html.Nodes;
@@ -70,20 +71,20 @@ namespace SiteEvaluator.SiteMapExploring
                 if (exploreSettings.LoadContent && !exploreSettings.UrlsForExcludeLoadContent.Contains(url.Loc))
                 {
                     var htmlLoadResult = await _contentLoaderService.LoadHtmlAsync(new Uri(url.Loc, UriKind.Absolute));
-                    var pageInfo = new PageInfo(htmlLoadResult);
+                    var pageInfo = new PageInfo(htmlLoadResult, hostUri.Host, ScannerType.SiteMap);
 
                     results.Add(pageInfo);
                     _exploreSettings.ExploreHtmlLoadedEvent?.Invoke(htmlLoadResult);
 
                     var allANodes = _htmlParseService.GetAllNodes<A>(pageInfo.Content);
 
-                    pageInfo.OuterUrls = Utils.FilterOuterLinksNodes(allANodes, hostUri)
-                        .Select(aNode => aNode.Href)
-                        .ToList()!;
+                    pageInfo.PageInfoUrls.AddRange(Utils.FilterOuterLinksNodes(allANodes, hostUri)
+                        .Select(aNode => new PageInfoUrl(aNode.Href, PageInfoUrlType.Outer))
+                        .ToList());
                     
-                    pageInfo.InnerUrls = Utils.FilterInnerLinkNodes(allANodes, hostUri)
-                        .Select(aNode => aNode.Href)
-                        .ToList()!;
+                    pageInfo.PageInfoUrls.AddRange(Utils.FilterInnerLinkNodes(allANodes, hostUri)
+                        .Select(aNode => new PageInfoUrl(aNode.Href, PageInfoUrlType.Inner))
+                        .ToList());
 
                     var allImgNodes = _htmlParseService.GetAllNodes<Img>(pageInfo.Content);
                     await _contentLoaderService.ScanAndApplyMediaLinks(
@@ -95,7 +96,7 @@ namespace SiteEvaluator.SiteMapExploring
                     continue;
                 }
 
-                results.Add(new PageInfo(new StringLoadResult(url.Loc)));
+                results.Add(new PageInfo(new StringLoadResult(url.Loc), hostUri.Host, ScannerType.SiteMap));
             }
 
             return results;

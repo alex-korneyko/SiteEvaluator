@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
 using SiteEvaluator.Crawler;
 using SiteEvaluator.Data;
+using SiteEvaluator.Data.DataHandlers;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.DataLoader.HttpLoader;
 using SiteEvaluator.Html;
@@ -21,12 +23,12 @@ namespace SiteEvaluator.ConsoleUI.Simple
             IContentLoaderService contentLoaderService = new ContentLoaderService(httpLoaderService);
             IHtmlParseService htmlParseService = new HtmlParseService();
             ISiteMapParseService siteMapParseService = new SiteMapParseService();
-            IDao<PageInfo> dao = new FileDao<PageInfo>();
+            IDataHandlerService<PageInfo> dataHandlerService = new FileDataHandlerService<PageInfo>();
 
             //Services. Second layer
             ISiteCrawler siteCrawler = new SiteCrawler(contentLoaderService, htmlParseService);
             ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(contentLoaderService, siteMapParseService, htmlParseService);
-            IReportService reportService = new ReportService(dao);
+            IReportService reportService = new ReportService(dataHandlerService);
 
             var applicationBuilder = ConsoleApplication.CreateBuilder(args);
             

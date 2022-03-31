@@ -9,9 +9,9 @@ using SiteEvaluator.DataLoader.HttpLoader;
 
 namespace SiteEvaluator.DataLoader
 {
-    public abstract class ContentLoadResult<T> 
-        : IEquatable<ContentLoadResult<T>>, IComparable<ContentLoadResult<T>>
-        where T : class
+    public abstract class ContentLoadResult<T> :
+        IEquatable<ContentLoadResult<T>>,
+        IComparable<ContentLoadResult<T>>
     {
         protected ContentLoadResult(string requestedUrl)
         {
@@ -77,11 +77,6 @@ namespace SiteEvaluator.DataLoader
                 return false;
             
             return Equals((ContentLoadResult<T>)obj);
-        }
-        
-        public void ClearContent()
-        {
-            Content = null;
         }
 
         public override int GetHashCode()

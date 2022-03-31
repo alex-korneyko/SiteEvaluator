@@ -2,6 +2,8 @@
 using Ninject;
 using SiteEvaluator.Crawler;
 using SiteEvaluator.Data;
+using SiteEvaluator.Data.DataHandlers;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.DataLoader.HttpLoader;
 using SiteEvaluator.Html;
@@ -35,7 +37,7 @@ namespace SiteEvaluator.ConsoleUI.Ninject
             kernel.Bind<IContentLoaderService>().To<ContentLoaderService>();
             kernel.Bind<IHtmlParseService>().To<HtmlParseService>();
             kernel.Bind<ISiteMapParseService>().To<SiteMapParseService>();
-            kernel.Bind<IDao<PageInfo>>().To<FileDao<PageInfo>>();
+            kernel.Bind<IDataHandlerService<PageInfo>>().To<FileDataHandlerService<PageInfo>>();
             
             //Services. Second layer
             kernel.Bind<ISiteCrawler>().To<SiteCrawler>();

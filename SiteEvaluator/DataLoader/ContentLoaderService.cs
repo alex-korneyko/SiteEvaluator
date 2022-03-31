@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader.HttpLoader;
 using SiteEvaluator.Html.Nodes;
 
@@ -140,7 +141,7 @@ namespace SiteEvaluator.DataLoader
                 if (string.IsNullOrEmpty(imgNode.Src))
                     continue;
             
-                pageInfo.MediaUrls.Add(imgNode.Src);
+                pageInfo.PageInfoUrls.Add(new PageInfoUrl(imgNode.Src, PageInfoUrlType.Media));
 
                 if (!loadImgContent) continue;
 

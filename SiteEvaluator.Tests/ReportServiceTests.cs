@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Moq;
 using SiteEvaluator.Data;
+using SiteEvaluator.Data.DataHandlers;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.Presentation;
 using Xunit;
@@ -21,7 +23,7 @@ namespace SiteEvaluator.Tests
             IList<PageInfo> expectedOnlyInSiteMapButNotInCrawler,
             IList<PageInfo> expectedCompositeResult)
         {
-            var mockDao = new Mock<IDao<PageInfo>>();
+            var mockDao = new Mock<IDataHandlerService<PageInfo>>();
             
             mockDao.Setup(dao => dao.GetCrawlerResultsData("https://site.com"))
                 .ReturnsAsync(crawlerResults);
@@ -57,7 +59,7 @@ namespace SiteEvaluator.Tests
             IList<PageInfo> expectedOnlyInSiteMapButNotInCrawler,
             IList<PageInfo> compositeResult)
         {
-            var mockDao = new Mock<IDao<PageInfo>>();
+            var mockDao = new Mock<IDataHandlerService<PageInfo>>();
             IReportService reportService = new ReportService(mockDao.Object);
             mockDao.Setup(dao => dao.SaveCrawlerResultsDataAsync("https://site.com", crawlerResults))
                 .ReturnsAsync(crawlerResults.Count);
@@ -76,7 +78,7 @@ namespace SiteEvaluator.Tests
             IList<PageInfo> expectedOnlyInSiteMapButNotInCrawler,
             IList<PageInfo> compositeResult)
         {
-            var mockDao = new Mock<IDao<PageInfo>>();
+            var mockDao = new Mock<IDataHandlerService<PageInfo>>();
             IReportService reportService = new ReportService(mockDao.Object);
             mockDao.Setup(dao => dao.SaveSiteMapResultsDataAsync("https://site.com", siteMapResults))
                 .ReturnsAsync(siteMapResults.Count);
@@ -127,50 +129,50 @@ namespace SiteEvaluator.Tests
         private IEnumerable<PageInfo> CrawlerResults =>
             new List<PageInfo>
             {
-                new(new StringLoadResult("link1")),
-                new(new StringLoadResult("link2")),
-                new(new StringLoadResult("link3")),
-                new(new StringLoadResult("link4")),
-                new(new StringLoadResult("link6")),
-                new(new StringLoadResult("link7"))
+                new(new StringLoadResult("link1"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link2"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link3"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link4"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link6"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link7"), "https://site.com", ScannerType.SiteCrawler)
             };
 
         private IEnumerable<PageInfo> OnlyInCrawlerButNotInSiteMap =>
             new List<PageInfo>
             {
-                new(new StringLoadResult("link6")),
-                new(new StringLoadResult("link7"))
+                new(new StringLoadResult("link6"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link7"), "https://site.com", ScannerType.SiteCrawler)
             };
 
         private IEnumerable<PageInfo> SiteMapResults =>
             new List<PageInfo>
             {
-                new(new StringLoadResult("link1")),
-                new(new StringLoadResult("link2")),
-                new(new StringLoadResult("link3")),
-                new(new StringLoadResult("link4")),
-                new(new StringLoadResult("link8")),
-                new(new StringLoadResult("link9"))
+                new(new StringLoadResult("link1"), "https://site.com", ScannerType.SiteMap),
+                new(new StringLoadResult("link2"), "https://site.com", ScannerType.SiteMap),
+                new(new StringLoadResult("link3"), "https://site.com", ScannerType.SiteMap),
+                new(new StringLoadResult("link4"), "https://site.com", ScannerType.SiteMap),
+                new(new StringLoadResult("link8"), "https://site.com", ScannerType.SiteMap),
+                new(new StringLoadResult("link9"), "https://site.com", ScannerType.SiteMap)
             };
         
         private IEnumerable<PageInfo> OnlyInSiteMapButNotInCrawler =>
             new List<PageInfo>
             {
-                new(new StringLoadResult("link8")),
-                new(new StringLoadResult("link9"))
+                new(new StringLoadResult("link8"), "https://site.com", ScannerType.SiteMap),
+                new(new StringLoadResult("link9"), "https://site.com", ScannerType.SiteMap)
             };
         
         private IEnumerable<PageInfo> CompositeResult => 
             new List<PageInfo>
             {
-                new(new StringLoadResult("link1")),
-                new(new StringLoadResult("link2")),
-                new(new StringLoadResult("link3")),
-                new(new StringLoadResult("link4")),
-                new(new StringLoadResult("link6")),
-                new(new StringLoadResult("link7")),
-                new(new StringLoadResult("link8")),
-                new(new StringLoadResult("link9"))
+                new(new StringLoadResult("link1"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link2"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link3"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link4"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link6"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link7"), "https://site.com", ScannerType.SiteCrawler),
+                new(new StringLoadResult("link8"), "https://site.com", ScannerType.SiteMap),
+                new(new StringLoadResult("link9"), "https://site.com", ScannerType.SiteMap)
             };
     }
 }

@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SiteEvaluator.Crawler;
-using SiteEvaluator.Data;
+using SiteEvaluator.Data.DataBaseContext;
+using SiteEvaluator.Data.DataHandlers;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.DataLoader.HttpLoader;
 using SiteEvaluator.Html;
@@ -20,7 +22,6 @@ namespace SiteEvaluator.ConsoleUI.MsHosting
             return CreateBuilder(args)
                 .Build()
                 .RunAsync();
-                // .BuildWithStartup<ConsoleView>();
         }
 
         private static IHostBuilder CreateBuilder(string[] args)
@@ -30,12 +31,14 @@ namespace SiteEvaluator.ConsoleUI.MsHosting
                 {
                     //Services. Zero layer
                     services.AddScoped<IHttpLoaderService, HttpLoaderService>();
+                    services.AddEfRepository<SiteEvaluatorDbContext>(_ => { });
 
                     //Services. First layer
                     services.AddScoped<IContentLoaderService, ContentLoaderService>();
                     services.AddScoped<IHtmlParseService, HtmlParseService>();
                     services.AddScoped<ISiteMapParseService, SiteMapParseService>();
-                    services.AddScoped<IDao<PageInfo>, FileDao<PageInfo>>();
+                    // services.AddScoped<IDataHandlerService<PageInfo>, FileDataHandlerService<PageInfo>>();
+                    services.AddScoped<IDataHandlerService<PageInfo>, DbPageInfoHandlerService>();
 
                     //Services. Second layer
                     services.AddScoped<ISiteCrawler, SiteCrawler>();

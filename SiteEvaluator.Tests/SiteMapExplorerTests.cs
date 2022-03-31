@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Moq;
+using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.DataLoader.HttpLoader;
 using SiteEvaluator.Html;
@@ -37,8 +38,10 @@ namespace SiteEvaluator.Tests
             if (pageInfos.Count != 0)
             {
                 Assert.Equal(2, pageInfos.Count);
-                Assert.Contains( new PageInfo(new StringLoadResult(SitemapData.Url1!.Loc!)), pageInfos);
-                Assert.Contains(new PageInfo(new StringLoadResult(SitemapData.Url2!.Loc!)), pageInfos);
+                var pageInfoUrl1 = new PageInfo(new StringLoadResult(SitemapData.Url1!.Loc!), "https://localhost", ScannerType.SiteMap);
+                var pageInfoUrl2 = new PageInfo(new StringLoadResult(SitemapData.Url2!.Loc!), "https://localhost", ScannerType.SiteMap);
+                Assert.Contains( pageInfoUrl1, pageInfos);
+                Assert.Contains(pageInfoUrl2, pageInfos);
             }
         }
 
