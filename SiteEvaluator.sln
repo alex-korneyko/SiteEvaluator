@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.ConsoleUI.MsHosting", "SiteEvaluator.ConsoleUI.MsHosting\SiteEvaluator.ConsoleUI.MsHosting.csproj", "{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiteEvaluator.MVC", "SiteEvaluator.MVC\SiteEvaluator.MVC.csproj", "{52DC7BBD-5016-4E6B-9C24-6D408FA73B09}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -76,6 +78,10 @@ Global
 		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{56E748C0-F805-4DB8-8ED3-CBBC8F61B0D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52DC7BBD-5016-4E6B-9C24-6D408FA73B09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52DC7BBD-5016-4E6B-9C24-6D408FA73B09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52DC7BBD-5016-4E6B-9C24-6D408FA73B09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52DC7BBD-5016-4E6B-9C24-6D408FA73B09}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D8424124-8930-4C55-A60E-19026DDBC530} = {E0BCE084-4438-4680-956A-7DE9CFE1211F}
