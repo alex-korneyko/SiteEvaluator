@@ -53,7 +53,7 @@ namespace SiteEvaluator.Data.Tests
         {
             var fileDao = new FileDataHandlerService<PageInfo>();
 
-            var toContentLoadResults = fileDao.ConvertToContentLoadResults(jsonSerializedResultsCollection);
+            var toContentLoadResults = fileDao.ConvertToTargetHost(jsonSerializedResultsCollection);
 
             Assert.Equal(contentLoadResults, toContentLoadResults);
         }

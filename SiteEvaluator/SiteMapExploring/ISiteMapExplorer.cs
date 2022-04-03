@@ -8,6 +8,6 @@ namespace SiteEvaluator.SiteMapExploring
 {
     public interface ISiteMapExplorer
     {
-        Task<IList<PageInfo>> ExploreAsync(string hostUrl, Action<ExploreSettings>? exploreSettings);
+        Task<TargetHost> ExploreAsync(Uri hostUri, Action<ExploreSettings>? exploreSettings);
     }
 }

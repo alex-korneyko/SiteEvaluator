@@ -11,6 +11,11 @@ namespace SiteEvaluator.Data.DataBaseContext
                 .HasMany(pageInfo => pageInfo.PageInfoUrls)
                 .WithOne(pageInfoUrl => pageInfoUrl.PageInfo)
                 .HasForeignKey(pageInfoUrl => pageInfoUrl.PageInfoId);
+
+            modelBuilder.Entity<TargetHost>()
+                .HasMany(host => host.PageInfos)
+                .WithOne(pageInfo => pageInfo.TargetHost)
+                .HasForeignKey(pageInfo => pageInfo.TargetHostId);
         }
     }
 }

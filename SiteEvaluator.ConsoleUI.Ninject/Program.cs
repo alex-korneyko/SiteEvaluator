@@ -37,7 +37,7 @@ namespace SiteEvaluator.ConsoleUI.Ninject
             kernel.Bind<IContentLoaderService>().To<ContentLoaderService>();
             kernel.Bind<IHtmlParseService>().To<HtmlParseService>();
             kernel.Bind<ISiteMapParseService>().To<SiteMapParseService>();
-            kernel.Bind<IDataHandlerService<PageInfo>>().To<FileDataHandlerService<PageInfo>>();
+            kernel.Bind<IDataHandlerService>().To<FileDataHandlerService>();
             
             //Services. Second layer
             kernel.Bind<ISiteCrawler>().To<SiteCrawler>();

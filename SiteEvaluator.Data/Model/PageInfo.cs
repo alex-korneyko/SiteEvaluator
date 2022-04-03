@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 
 namespace SiteEvaluator.Data.Model
@@ -6,7 +7,6 @@ namespace SiteEvaluator.Data.Model
     public class PageInfo: IEquatable<PageInfo>, IComparable<PageInfo>, IHasContent, IEntity
     {
         public int Id { get; set; }
-        public string SourceHost { get; set; }
         public ScannerType ScannerType { get; set; }
         public string Url { get; set; } = string.Empty;
         public string Content { get; set; } = string.Empty;
@@ -14,14 +14,15 @@ namespace SiteEvaluator.Data.Model
         public long TotalLoadTime { get; set; }
         public int Level { get; set; }
         public long TotalSize { get; set; }
+        public TargetHost? TargetHost { get; set; }
+        public int TargetHostId { get; set; }
 
         public PageInfo()
         {
         }
 
-        public PageInfo(IPageInfoLoadResult pageInfoLoadResult, string sourceHost, ScannerType scannerType, int level = 0)
+        public PageInfo(IPageInfoLoadResult pageInfoLoadResult, ScannerType scannerType, int level = 0)
         {
-            SourceHost = sourceHost;
             ScannerType = scannerType;
             Url = pageInfoLoadResult.RequestedUrl;
             Content = pageInfoLoadResult.Content ?? string.Empty;

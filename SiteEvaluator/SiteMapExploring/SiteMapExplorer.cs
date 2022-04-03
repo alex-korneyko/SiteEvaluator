@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SiteEvaluator.Common;
+using SiteEvaluator.Data.DataHandlers;
 using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.Html;
@@ -17,37 +17,46 @@ namespace SiteEvaluator.SiteMapExploring
         private readonly IContentLoaderService _contentLoaderService;
         private readonly ISiteMapParseService _siteMapParseService;
         private readonly IHtmlParseService _htmlParseService;
+        private readonly IDataHandlerService _dataHandlerService;
         private readonly ExploreSettings _exploreSettings = new();
 
         public SiteMapExplorer(
             IContentLoaderService contentLoaderService,
             ISiteMapParseService siteMapParseService,
-            IHtmlParseService htmlParseService)
+            IHtmlParseService htmlParseService,
+            IDataHandlerService dataHandlerService)
         {
             _contentLoaderService = contentLoaderService;
             _siteMapParseService = siteMapParseService;
             _htmlParseService = htmlParseService;
+            _dataHandlerService = dataHandlerService;
         }
 
-        public async Task<IList<PageInfo>> ExploreAsync(string hostUrl, Action<ExploreSettings>? exploreSettings = null)
+        public async Task<TargetHost> ExploreAsync(Uri hostUri, Action<ExploreSettings>? exploreSettings = null)
         {
             exploreSettings?.Invoke(_exploreSettings);
 
-            var hostUri = new Uri(hostUrl);
             var loadSiteMapResult = await _contentLoaderService.LoadSiteMapAsync(hostUri);
 
-            if (!loadSiteMapResult.IsSuccess
-                || loadSiteMapResult.HttpStatusCode != HttpStatusCode.OK
-                || loadSiteMapResult.Content == null)
+            if (!loadSiteMapResult.IsSuccess ||
+                loadSiteMapResult.HttpStatusCode != HttpStatusCode.OK ||
+                loadSiteMapResult.Content == null)
             {
-                return new List<PageInfo>();
+                var targetHost = new TargetHost(hostUri)
+                {
+                    SiteMapError = true
+                };
+                
+                return await _dataHandlerService.SaveTargetHostAsync(targetHost);
             }
 
             try
             {
                 var siteMap = _siteMapParseService.DeserializeToSiteMap(loadSiteMapResult.Content);
 
-                return await ToPageInfoListAsync(siteMap, hostUri, _exploreSettings);
+                var targetHost = await ToPageInfoListAsync(siteMap, hostUri, _exploreSettings);
+
+                return await _dataHandlerService.SaveTargetHostAsync(targetHost);
             }
             catch (Exception e)
             {
@@ -56,13 +65,17 @@ namespace SiteEvaluator.SiteMapExploring
             }
         }
 
-        private async Task<IList<PageInfo>> ToPageInfoListAsync(SiteMap siteMap, Uri hostUri, ExploreSettings exploreSettings)
+        private async Task<TargetHost> ToPageInfoListAsync(SiteMap siteMap, Uri hostUri, ExploreSettings exploreSettings)
         {
-            var results = new List<PageInfo>();
+            var targetHost = new TargetHost(hostUri);
 
-            if (siteMap.UrlSet == null) 
-                return results;
-            
+            if (siteMap.UrlSet == null)
+            {
+                targetHost.SiteMapError = true;
+                
+                return targetHost;
+            }
+
             foreach (var url in siteMap.UrlSet)
             {
                 if (url.Loc == null)
@@ -71,9 +84,9 @@ namespace SiteEvaluator.SiteMapExploring
                 if (exploreSettings.LoadContent && !exploreSettings.UrlsForExcludeLoadContent.Contains(url.Loc))
                 {
                     var htmlLoadResult = await _contentLoaderService.LoadHtmlAsync(new Uri(url.Loc, UriKind.Absolute));
-                    var pageInfo = new PageInfo(htmlLoadResult, hostUri.Host, ScannerType.SiteMap);
+                    var pageInfo = new PageInfo(htmlLoadResult, ScannerType.SiteMap);
 
-                    results.Add(pageInfo);
+                    targetHost.PageInfos.Add(pageInfo);
                     _exploreSettings.ExploreHtmlLoadedEvent?.Invoke(htmlLoadResult);
 
                     var allANodes = _htmlParseService.GetAllNodes<A>(pageInfo.Content);
@@ -96,10 +109,10 @@ namespace SiteEvaluator.SiteMapExploring
                     continue;
                 }
 
-                results.Add(new PageInfo(new StringLoadResult(url.Loc), hostUri.Host, ScannerType.SiteMap));
+                targetHost.PageInfos.Add(new PageInfo(new StringLoadResult(url.Loc), ScannerType.SiteMap));
             }
 
-            return results;
+            return targetHost;
         }
     }
 }

@@ -23,11 +23,11 @@ namespace SiteEvaluator.ConsoleUI.Simple
             IContentLoaderService contentLoaderService = new ContentLoaderService(httpLoaderService);
             IHtmlParseService htmlParseService = new HtmlParseService();
             ISiteMapParseService siteMapParseService = new SiteMapParseService();
-            IDataHandlerService<PageInfo> dataHandlerService = new FileDataHandlerService<PageInfo>();
+            IDataHandlerService dataHandlerService = new FileDataHandlerService();
 
             //Services. Second layer
-            ISiteCrawler siteCrawler = new SiteCrawler(contentLoaderService, htmlParseService);
-            ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(contentLoaderService, siteMapParseService, htmlParseService);
+            ISiteCrawler siteCrawler = new SiteCrawler(contentLoaderService, htmlParseService, dataHandlerService);
+            ISiteMapExplorer siteMapExplorer = new SiteMapExplorer(contentLoaderService, siteMapParseService, htmlParseService, dataHandlerService);
             IReportService reportService = new ReportService(dataHandlerService);
 
             var applicationBuilder = ConsoleApplication.CreateBuilder(args);

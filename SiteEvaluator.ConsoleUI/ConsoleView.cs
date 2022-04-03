@@ -24,40 +24,36 @@ namespace SiteEvaluator.ConsoleUI
             _siteMapExplorer = siteMapExplorer;
         }
         
-        public async Task<int> ScanHostAsync(string hostUrl, bool logToConsole = false, bool includeNofollowLinks = false)
+        public async Task<TargetHost> ScanHostAsync(Uri hostUri, bool logToConsole = false, bool includeNofollowLinks = false)
         {
             if (logToConsole) 
-                ConsoleX.WriteLine.Warning($"Start crawling: {hostUrl}\n\t↓ ↓ ↓");
-            
-            IList<PageInfo> siteCrawlerResults = await _siteCrawler
-                .CrawlAsync(hostUrl, settings => 
+                ConsoleX.WriteLine.Warning($"Start crawling: {hostUri.Host}\n\t↓ ↓ ↓");
+
+            var crawledHost = await _siteCrawler
+                .CrawlAsync(hostUri, settings => 
                     GetCrawlerSettings(logToConsole, includeNofollowLinks, settings));
-            
-            if (logToConsole) 
-                ConsoleX.WriteLine.Success($"Crawling finished. Crawled: {siteCrawlerResults.Count} pages\n");
 
-            await _reportService.AddCrawlerResultsAsync(hostUrl, siteCrawlerResults);
-            
-            if (logToConsole) 
-                ConsoleX.WriteLine.Warning($"Start sitemap.xml exploring: {hostUrl}\nLoad content...\n\t↓ ↓ ↓");
-            
-            IList<PageInfo> siteMapExplorerResults = await _siteMapExplorer
-                .ExploreAsync(hostUrl, settings => 
-                    GetSiteMapExplorerSettings(logToConsole, settings, siteCrawlerResults));
-            
-            if (logToConsole) 
-                ConsoleX.WriteLine.Success($"sitemap.xml explored. Founded: {siteMapExplorerResults.Count} links\n");
+            if (logToConsole)
+                PrintCount(crawledHost, ScannerType.SiteCrawler);
 
-            await _reportService.AddSiteMapExplorerResultsAsync(hostUrl, siteMapExplorerResults);
+            if (logToConsole) 
+                ConsoleX.WriteLine.Warning($"Start sitemap.xml exploring: {hostUri.Host}\nLoad content...\n\t↓ ↓ ↓");
+            
+            var siteMapScannedHost = await _siteMapExplorer
+                .ExploreAsync(hostUri, settings => 
+                    GetSiteMapExplorerSettings(logToConsole, settings, crawledHost.PageInfos));
 
-            return siteCrawlerResults.Count + siteMapExplorerResults.Count;
+            if (logToConsole)
+                PrintCount(siteMapScannedHost, ScannerType.SiteMap);
+            
+            return siteMapScannedHost;
         }
-        
-        public async Task ShowUniqLinksInSiteMapAsync(string hostUrl)
+
+        public async Task ShowUniqLinksInSiteMapAsync(Uri hostUri)
         {
             ConsoleX.WriteLine.Warning("Urls FOUNDED IN SITEMAP.XML but not founded after crawling a web site");
 
-            var links = (await _reportService.GetUniqInSiteMapResults(hostUrl))
+            var links = (await _reportService.GetUniqInSiteMapResults(hostUri))
                 .Select(result => result.Url)
                 .ToList();
             
@@ -69,11 +65,11 @@ namespace SiteEvaluator.ConsoleUI
             ConsoleX.WriteLine.Success($"Total: {links.Count()}\n");
         }
         
-        public async Task ShowUniqLinksByCrawlingAsync(string hostUrl)
+        public async Task ShowUniqLinksByCrawlingAsync(Uri hostUri)
         {
             ConsoleX.WriteLine.Warning("Urls FOUNDED BY CRAWLING THE WEBSITE but not in sitemap.xml");
 
-            var links = (await _reportService.GetUniqCrawlerResults(hostUrl))
+            var links = (await _reportService.GetUniqCrawlerResults(hostUri))
                 .Select(result => result.Url)
                 .ToList();
             
@@ -85,9 +81,9 @@ namespace SiteEvaluator.ConsoleUI
             ConsoleX.WriteLine.Success($"Total: {links.Count()}\n");
         }
 
-        public async Task ShowCompositeReportAsync(string hostUrl)
+        public async Task ShowCompositeReportAsync(Uri hostUri)
         {
-            var compositeReport = await _reportService.GetCompositeReportAsync(hostUrl);
+            var compositeReport = await _reportService.GetCompositeReportAsync(hostUri);
 
             ConsoleX.WriteLine.Success("Composite report sorted by timings:");
             
@@ -96,10 +92,19 @@ namespace SiteEvaluator.ConsoleUI
             ConsoleX.WriteLine.Info();
             
             ConsoleX.WriteLine.Success("Urls(html documents) found after crawling a website: " +
-                                       $"{(await _reportService.GetCrawlerResultsAsync(hostUrl)).Count()}");
+                                       $"{(await _reportService.GetCrawlerResultsAsync(hostUri)).Count()}");
             
             ConsoleX.WriteLine.Success($"Urls found in sitemap: " +
-                                       $"{(await _reportService.GetSiteMapResultsAsync(hostUrl)).Count()}");
+                                       $"{(await _reportService.GetSiteMapResultsAsync(hostUri)).Count()}");
+        }
+        
+        private static void PrintCount(TargetHost crawledHost, ScannerType scannerType)
+        {
+            var count = crawledHost.PageInfos
+                .Where(page => page.ScannerType == scannerType)
+                .ToList().Count;
+
+            ConsoleX.WriteLine.Success($"Handled: {count} pages by {scannerType.ToString()}\n");
         }
 
         private void PagesInfoTableConsoleComponent(IList<PageInfo> pages)

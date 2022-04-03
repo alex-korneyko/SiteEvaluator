@@ -11,6 +11,7 @@ namespace SiteEvaluator.Data.DataBaseContext
     {
         private readonly IConfiguration _configuration;
 
+        public DbSet<TargetHost> TargetHosts { get; set; }
         public DbSet<PageInfo> PageInfos { get; set; }
         public DbSet<PageInfoUrl> PageInfoUrls { get; set; }
 

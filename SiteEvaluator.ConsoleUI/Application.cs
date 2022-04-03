@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using SiteEvaluator.ConsoleUI.ConsoleXtend;
 
 namespace SiteEvaluator.ConsoleUI
@@ -16,7 +17,7 @@ namespace SiteEvaluator.ConsoleUI
 
         public async Task StartAsync()
         {
-            var hostUrl = GetHostUrl(_args);
+            var hostUrl = GetHostUri(_args);
             
             await _consoleView.ScanHostAsync(hostUrl, true);
 
@@ -29,7 +30,7 @@ namespace SiteEvaluator.ConsoleUI
             ConsoleX.ReadLine.Note("Job completed. Press ENTER for exit...");
         }
         
-        private static string GetHostUrl(string[] args)
+        private static Uri GetHostUri(string[] args)
         {
             var hostUrl = args.Length == 0
                 ? ConsoleX.ReadLine.Warning("Please, enter host URL for evaluate: ")
@@ -38,7 +39,7 @@ namespace SiteEvaluator.ConsoleUI
             if (hostUrl.Equals(""))
                 hostUrl = "https://www.ukad-group.com/";
 
-            return hostUrl;
+            return new Uri(hostUrl);
         }
     }
 }

@@ -9,120 +9,80 @@ using SiteEvaluator.Data.Model;
 
 namespace SiteEvaluator.Data.DataHandlers
 {
-    public class FileDataHandlerService<T> : IDataHandlerService<T> where
-        T : class, IHasContent, IEntity
+    public class FileDataHandlerService : IDataHandlerService
     {
-        private const string FileNameCrawlerSuffix = ".crawler";
-        private const string FileNameSiteMapSuffix = ".sitemap";
+        private const string FileExtension = ".hostData";
         private readonly string _dataDirectoryName = Environment.CurrentDirectory + @"\Data\";
 
-        public async Task<IEnumerable<T>> GetCrawlerResultsData(string hostUrl)
+        public IEnumerable<TargetHost> GetAllAsync()
         {
-            var fileName = GetFileName(hostUrl, FileNameCrawlerSuffix);
+            //TODO Need to implement
+            return new List<TargetHost>();
+        }
+        
+        public async Task<TargetHost> GetTargetHostAsync(Uri hostUri)
+        {
+            var fileName = GetFileName(hostUri.Host);
 
             var jsonStrings = await LoadFromFileAsync(fileName);
 
-            var contentLoadResults = ConvertToContentLoadResults(jsonStrings);
+            var targetHost = ConvertToTargetHost(jsonStrings);
 
-            return contentLoadResults;
+            return targetHost ?? new TargetHost(hostUri);
         }
 
-        public async Task<IEnumerable<T>> GetSiteMapResultsData(string hostUrl)
+        public async Task<TargetHost> SaveTargetHostAsync(TargetHost targetHost)
         {
-            var fileName = GetFileName(hostUrl, FileNameSiteMapSuffix);
-
-            var jsonStrings = await LoadFromFileAsync(fileName);
-
-            var contentLoadResults = ConvertToContentLoadResults(jsonStrings);
-
-            return contentLoadResults;
-        }
-
-        public async Task<long> SaveCrawlerResultsDataAsync(string hostUrl, IEnumerable<T> data)
-        {
-            var fileName = GetFileName(hostUrl, FileNameCrawlerSuffix);
-
-            if (fileName == "")
-                return 0;
-
-            var jsonSerializedResults = ConvertToJsonStrings(data);
-
-            var count = await SaveToFileAsync(fileName, jsonSerializedResults);
+            var fileName = GetFileName(targetHost.HostUrl);
             
-            return count;
+            targetHost.PageInfos.ForEach(pageInfo => pageInfo.ClearContent());
+
+            var serializedTargetHost = JsonSerializer.Serialize(targetHost);
+
+            await SaveToFileAsync(fileName, serializedTargetHost);
+
+            return targetHost;
         }
 
-        public async Task<long> SaveSiteMapResultsDataAsync(string hostUrl, IEnumerable<T> data)
-        {
-            var fileName = GetFileName(hostUrl, FileNameSiteMapSuffix);
-
-            if (fileName == "")
-                return 0;
-
-            var jsonSerializedResults = ConvertToJsonStrings(data);
-
-            var count = await SaveToFileAsync(fileName, jsonSerializedResults);
-            
-            return count;
-        }
-
-        public string GetFileName(string hostUrl, string suffix)
+        public string GetFileName(string hostUrl)
         {
             if (string.IsNullOrEmpty(hostUrl))
-                return "";
+                throw new ArgumentNullException(hostUrl);
 
             var fullName = new StringBuilder();
 
             if (!hostUrl.Contains("//"))
-                return fullName.Append(hostUrl).Append(suffix).Append(".result").ToString();
+                return fullName.Append(hostUrl).Append(".").ToString();
             
             hostUrl = hostUrl.Split("//")[1];
             hostUrl = hostUrl.EndsWith("/") ? hostUrl[..^1] : hostUrl;
 
-            return hostUrl == "" ? "" : fullName.Append(hostUrl).Append(suffix).Append(".result").ToString();
+            return hostUrl == "" ? "" : fullName.Append(hostUrl).Append(FileExtension).ToString();
         }
 
-        public IEnumerable<string> ConvertToJsonStrings(IEnumerable<T> contentLoadResults)
+        public string ConvertToJsonStrings(TargetHost targetHost)
         {
-            var jsonDataSet = new List<string>();
-            
-            foreach (var contentLoadResult in contentLoadResults)
+            return JsonSerializer.Serialize(targetHost);
+        }
+
+        public TargetHost? ConvertToTargetHost(string targetHostJsonString)
+        {
+            try
             {
-                contentLoadResult.ClearContent();
-                
-                var serializedResult = JsonSerializer.Serialize(contentLoadResult);
-                
-                jsonDataSet.Add(serializedResult);
+                var targetHost = JsonSerializer.Deserialize<TargetHost>(targetHostJsonString);
+                if (targetHost != null) 
+                    return targetHost;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
 
-            return jsonDataSet;
+            return null;
         }
 
-        public IEnumerable<T> ConvertToContentLoadResults(IEnumerable<string> jsonStringsCollection)
-        {
-            var contentLoadResults = new List<T>();
-
-            foreach (var jsonString in jsonStringsCollection)
-            {
-
-                try
-                {
-                    var contentLoadResult = JsonSerializer.Deserialize<T>(jsonString);
-                    if (contentLoadResult != null) 
-                        contentLoadResults.Add(contentLoadResult);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(jsonString);
-                    Console.WriteLine(e);
-                    throw;
-                }
-            }
-
-            return contentLoadResults;
-        }
-
-        public async Task<long> SaveToFileAsync(string fileName, IEnumerable<string> jsonSerializedResults)
+        public async Task SaveToFileAsync(string fileName, string serializedTargetHost)
         {
             var fullFilePath = _dataDirectoryName + fileName;
             if (!Directory.Exists(_dataDirectoryName)) 
@@ -130,40 +90,27 @@ namespace SiteEvaluator.Data.DataHandlers
 
             if (File.Exists(fullFilePath))
                 File.Delete(fullFilePath);
-
-            long counter = 0;
-
-            await using var fileStream = new StreamWriter(fullFilePath, true);
             
-            foreach (var jsonSerializedResult in jsonSerializedResults)
-            {
-                await fileStream.WriteLineAsync(jsonSerializedResult);
-                counter++;
-            }
+            await using var fileStream = new StreamWriter(fullFilePath, true);
 
-            return counter;
+            await fileStream.WriteAsync(serializedTargetHost);
         }
 
-        public async Task<IEnumerable<string>> LoadFromFileAsync(string fileName)
+        public async Task<string> LoadFromFileAsync(string fileName)
         {
             var fullFilePath = _dataDirectoryName + fileName;
             if (!Directory.Exists(_dataDirectoryName)) 
                 Directory.CreateDirectory(_dataDirectoryName);
             
-            var result = new List<string>();
-            
             if (!File.Exists(fullFilePath))
-                return result;
+            {
+                File.Create(fullFilePath);
+                return string.Empty;
+            }
 
             using var fileStream = new StreamReader(fullFilePath);
 
-            string? jsonLine;
-            while ((jsonLine = await fileStream.ReadLineAsync()) != null)
-            {
-                result.Add(jsonLine);
-            }
-
-            return result;
+            return await fileStream.ReadToEndAsync();
         }
     }
 }

@@ -37,7 +37,7 @@ namespace SiteEvaluator.ConsoleUI.Autofac
             containerBuilder.RegisterType<ContentLoaderService>().As<IContentLoaderService>().SingleInstance();
             containerBuilder.RegisterType<HtmlParseService>().As<IHtmlParseService>().SingleInstance();
             containerBuilder.RegisterType<SiteMapParseService>().As<ISiteMapParseService>().SingleInstance();
-            containerBuilder.RegisterType<FileDataHandlerService<PageInfo>>().As<IDataHandlerService<PageInfo>>().SingleInstance();
+            containerBuilder.RegisterType<FileDataHandlerService>().As<IDataHandlerService>().SingleInstance();
             
             //Services. Second layer
             containerBuilder.RegisterType<SiteCrawler>().As<ISiteCrawler>().SingleInstance();

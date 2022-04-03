@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using SiteEvaluator.Data;
 using SiteEvaluator.Data.DataHandlers;
 using SiteEvaluator.Data.Model;
 
@@ -9,57 +9,59 @@ namespace SiteEvaluator.Presentation
 {
     public class ReportService : IReportService
     {
-        private readonly IDataHandlerService<PageInfo> _dataHandlerService;
+        private readonly IDataHandlerService _dataHandlerService;
 
-        public ReportService(IDataHandlerService<PageInfo> dataHandlerService)
+        public ReportService(IDataHandlerService dataHandlerService)
         {
             _dataHandlerService = dataHandlerService;
         }
 
-        public async Task AddCrawlerResultsAsync(
-            string hostUrl,
-            IEnumerable<PageInfo> crawlerResults)
+        // public async Task AddCrawlerResultsAsync(
+        //     Uri hostUri,
+        //     IEnumerable<PageInfo> crawlerResults)
+        // {
+        //    await _dataHandlerService.SaveTargetHost(hostUri, crawlerResults);
+        // }
+        //
+        // public async Task AddSiteMapExplorerResultsAsync(
+        //     Uri hostUri,
+        //     IEnumerable<PageInfo> siteMapExploreResults)
+        // {
+        //     await _dataHandlerService.SaveTargetHost(hostUri, siteMapExploreResults);
+        // }
+
+        public async Task<IEnumerable<PageInfo>> GetCrawlerResultsAsync(Uri hostUri)
         {
-           await _dataHandlerService.SaveCrawlerResultsDataAsync(hostUrl, crawlerResults);
+            return (await _dataHandlerService.GetTargetHostAsync(hostUri)).PageInfos
+                .Where(page => page.ScannerType == ScannerType.SiteCrawler);
         }
 
-        public async Task AddSiteMapExplorerResultsAsync(
-            string hostUrl,
-            IEnumerable<PageInfo> siteMapExploreResults)
+        public async Task<IEnumerable<PageInfo>> GetSiteMapResultsAsync(Uri hostUri)
         {
-            await _dataHandlerService.SaveSiteMapResultsDataAsync(hostUrl, siteMapExploreResults);
+            return (await _dataHandlerService.GetTargetHostAsync(hostUri)).PageInfos
+                .Where(page => page.ScannerType == ScannerType.SiteCrawler);
         }
 
-        public async Task<IEnumerable<PageInfo>> GetCrawlerResultsAsync(string hostUrl)
+        public async Task<IEnumerable<PageInfo>> GetUniqInSiteMapResults(Uri hostUri)
         {
-            return await _dataHandlerService.GetCrawlerResultsData(hostUrl);
-        }
-
-        public async Task<IEnumerable<PageInfo>> GetSiteMapResultsAsync(string hostUrl)
-        {
-            return await _dataHandlerService.GetSiteMapResultsData(hostUrl);
-        }
-
-        public async Task<IEnumerable<PageInfo>> GetUniqInSiteMapResults(string hostUrl)
-        {
-            var crawlerResultsData = await _dataHandlerService.GetCrawlerResultsData(hostUrl);
-            var siteMapResultsData = await _dataHandlerService.GetSiteMapResultsData(hostUrl);
+            var crawlerResultsData = await GetCrawlerResultsAsync(hostUri);
+            var siteMapResultsData = await GetSiteMapResultsAsync(hostUri);
             
             return siteMapResultsData.Except(crawlerResultsData);
         }
 
-        public async Task<IEnumerable<PageInfo>> GetUniqCrawlerResults(string hostUrl)
+        public async Task<IEnumerable<PageInfo>> GetUniqCrawlerResults(Uri hostUri)
         {
-            var crawlerResultsData = await _dataHandlerService.GetCrawlerResultsData(hostUrl);
-            var siteMapResultsData = await _dataHandlerService.GetSiteMapResultsData(hostUrl);
+            var crawlerResultsData = await GetCrawlerResultsAsync(hostUri);
+            var siteMapResultsData = await GetSiteMapResultsAsync(hostUri);
             
             return crawlerResultsData.Except(siteMapResultsData);
         }
 
-        public async Task<IEnumerable<PageInfo>> GetCompositeReportAsync(string hostUrl)
+        public async Task<IEnumerable<PageInfo>> GetCompositeReportAsync(Uri hostUri)
         {
-            var crawlerResultsData = await _dataHandlerService.GetCrawlerResultsData(hostUrl);
-            var siteMapResultsData = await _dataHandlerService.GetSiteMapResultsData(hostUrl);
+            var crawlerResultsData = await GetCrawlerResultsAsync(hostUri);
+            var siteMapResultsData = await GetSiteMapResultsAsync(hostUri);
 
             var compositeReport = crawlerResultsData
                 .Union(siteMapResultsData)

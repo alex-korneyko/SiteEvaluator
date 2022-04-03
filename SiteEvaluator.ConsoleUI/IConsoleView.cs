@@ -1,12 +1,14 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using SiteEvaluator.Data.Model;
 
 namespace SiteEvaluator.ConsoleUI
 {
     public interface IConsoleView
     {
-        Task<int> ScanHostAsync(string hostUrl, bool logToConsole = false, bool includeNofollowLinks = false);
-        Task ShowUniqLinksInSiteMapAsync(string hostUrl);
-        Task ShowUniqLinksByCrawlingAsync(string hostUrl);
-        Task ShowCompositeReportAsync(string hostUrl);
+        Task<TargetHost> ScanHostAsync(Uri hostUri, bool logToConsole = false, bool includeNofollowLinks = false);
+        Task ShowUniqLinksInSiteMapAsync(Uri hostUri);
+        Task ShowUniqLinksByCrawlingAsync(Uri hostUri);
+        Task ShowCompositeReportAsync(Uri hostUri);
     }
 }

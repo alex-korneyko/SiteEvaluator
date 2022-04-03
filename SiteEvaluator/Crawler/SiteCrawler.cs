@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SiteEvaluator.Common;
+using SiteEvaluator.Data.DataHandlers;
 using SiteEvaluator.Data.Model;
 using SiteEvaluator.DataLoader;
 using SiteEvaluator.Html;
@@ -15,40 +15,47 @@ namespace SiteEvaluator.Crawler
     {
         private readonly IContentLoaderService _contentLoaderService;
         private readonly IHtmlParseService _htmlParseService;
-        private readonly List<PageInfo> _result = new();
+        private readonly IDataHandlerService _dataHandlerService;
+
         private readonly CrawlerSettings _settings = new();
 
-        public SiteCrawler(IContentLoaderService contentLoaderService, IHtmlParseService htmlParseService)
+        public SiteCrawler(
+            IContentLoaderService contentLoaderService,
+            IHtmlParseService htmlParseService,
+            IDataHandlerService dataHandlerService)
         {
             _contentLoaderService = contentLoaderService;
             _htmlParseService = htmlParseService;
+            _dataHandlerService = dataHandlerService;
         }
 
-        public async Task<IList<PageInfo>> CrawlAsync(string hostUrl, Action<CrawlerSettings>? crawlerSettings = null)
+        public async Task<TargetHost> CrawlAsync(Uri hostUri, Action<CrawlerSettings>? crawlerSettings = null)
         {
             crawlerSettings?.Invoke(_settings);
-
-            var hostUri = new Uri(hostUrl);
-
-            StringLoadResult stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUri);
             
-            var pageInfo = new PageInfo(stringLoadResult, hostUri.Host, ScannerType.SiteCrawler)
+            var targetHost = new TargetHost(hostUri);
+
+            var stringLoadResult = await _contentLoaderService.LoadHtmlAsync(hostUri);
+            
+            var pageInfo = new PageInfo(stringLoadResult, ScannerType.SiteCrawler)
             {
                 Level = 0
             };
 
-            _result.Add(pageInfo);
+            targetHost.PageInfos.Add(pageInfo);
             _settings.CrawlHtmlLoadedEvent?.Invoke(stringLoadResult);
 
             if (stringLoadResult.HttpStatusCode == HttpStatusCode.OK && !string.IsNullOrEmpty(pageInfo.Content))
             {
-                await ScanLinksAsync(hostUri, pageInfo);
+                await ScanLinksAsync(hostUri, pageInfo, targetHost);
             }
-            
-            return _result;
+
+            var savedTargetHost = await _dataHandlerService.SaveTargetHostAsync(targetHost);
+
+            return savedTargetHost;
         }
 
-        private async Task ScanLinksAsync(Uri hostUri, PageInfo pageInfo)
+        private async Task ScanLinksAsync(Uri hostUri, PageInfo pageInfo, TargetHost targetHost)
         {
             var allImgNodes = _htmlParseService.GetAllNodes<Img>(pageInfo.Content);
             await _contentLoaderService.ScanAndApplyMediaLinks(pageInfo, allImgNodes, _settings.LoadMedia, _settings.CrawlImageLoadedEvent);
@@ -72,7 +79,7 @@ namespace SiteEvaluator.Crawler
                 if (!hostUri.AbsoluteUri.Equals(currentNodeFullUri.AbsoluteUri))
                     pageInfo.PageInfoUrls.Add(new PageInfoUrl(currentNodeFullUri.AbsolutePath, PageInfoUrlType.Inner));
 
-                var alreadyCrawledPage = _result.FirstOrDefault(page => page.Url.Equals(currentNodeFullUri.AbsoluteUri));
+                var alreadyCrawledPage = targetHost.PageInfos.FirstOrDefault(page => page.Url.Equals(currentNodeFullUri.AbsoluteUri));
                 if (alreadyCrawledPage != null)
                     continue;
 
@@ -80,15 +87,15 @@ namespace SiteEvaluator.Crawler
                 if (htmlLoadResult.HttpStatusCode != HttpStatusCode.OK || !htmlLoadResult.ContentType.Contains("text/html"))
                     continue;
                 
-                var newPageInfo = new PageInfo(htmlLoadResult, hostUri.Host, ScannerType.SiteCrawler, ++pageInfo.Level);
+                var newPageInfo = new PageInfo(htmlLoadResult, ScannerType.SiteCrawler, ++pageInfo.Level);
 
-                _result.Add(newPageInfo);
+                targetHost.PageInfos.Add(newPageInfo);
                 _settings.CrawlHtmlLoadedEvent?.Invoke(htmlLoadResult);
 
                 if (!htmlLoadResult.IsSuccess)
                     continue;
 
-                await ScanLinksAsync(hostUri, newPageInfo);
+                await ScanLinksAsync(hostUri, newPageInfo, targetHost);
             }
         }
     }

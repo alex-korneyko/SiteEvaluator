@@ -37,8 +37,8 @@ namespace SiteEvaluator.ConsoleUI.MsHosting
                     services.AddScoped<IContentLoaderService, ContentLoaderService>();
                     services.AddScoped<IHtmlParseService, HtmlParseService>();
                     services.AddScoped<ISiteMapParseService, SiteMapParseService>();
-                    // services.AddScoped<IDataHandlerService<PageInfo>, FileDataHandlerService<PageInfo>>();
-                    services.AddScoped<IDataHandlerService<PageInfo>, DbPageInfoHandlerService>();
+                    services.AddScoped<IDataHandlerService, FileDataHandlerService>();
+                    services.AddScoped<IDataHandlerService, DbDataHandlerService>();
 
                     //Services. Second layer
                     services.AddScoped<ISiteCrawler, SiteCrawler>();
